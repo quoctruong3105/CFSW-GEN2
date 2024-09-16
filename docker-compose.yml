@@ -1,0 +1,74 @@
+---
+version: '3'
+
+services:
+  api_gateway:
+    image: nginx
+    container_name: 'api_gateway'
+    profiles:
+      - gateway
+    volumes:
+      - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:80"
+    networks:
+      - frontend-network
+      - backend-network
+
+  account:
+    image: account:1.0
+    container_name: account
+    profiles:
+      - sv
+    build:
+      context: ./services/account/src
+      dockerfile: Dockerfile
+    networks:
+      - backend-network
+      - db-network
+
+  order:
+    image: order:1.0
+    container_name: order
+    profiles:
+      - sv
+    build:
+      context: ./services/order/src
+      dockerfile: Dockerfile
+    networks:
+      - backend-network
+      - db-network
+
+  license:
+    image: license:1.0
+    container_name: license
+    profiles:
+      - sv
+    build:
+      context: ./services/license/src
+      dockerfile: Dockerfile
+    networks:
+      - backend-network
+      - db-network
+
+  account_db:
+    image: postgres:15
+    container_name: account_db
+    profiles:
+      - db
+    restart: always
+    networks:
+      - db-network
+    volumes:
+      - ./services/account/db/data:/var/lib/postgres/data
+      - ./services/account/db/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./services/account/db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./services/account/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  db-network:
+    driver: bridge
