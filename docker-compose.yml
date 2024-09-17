@@ -15,11 +15,29 @@ services:
       - frontend-network
       - backend-network
 
+  pg_db:
+    image: postgres:15
+    container_name: pg_db
+    profiles:
+      - db
+    restart: always
+    ports:
+      - 5431:5432
+    networks:
+      - db-network
+    volumes:
+      - ./db/data:/var/lib/postgres/data
+      - .db/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - .db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - .db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
   account:
     image: account:1.0
     container_name: account
     profiles:
       - sv
+    depends_on:
+      - pg_db
     build:
       context: ./services/account/src
       dockerfile: Dockerfile
@@ -32,6 +50,8 @@ services:
     container_name: order
     profiles:
       - sv
+    depends_on:
+      - pg_db
     build:
       context: ./services/order/src
       dockerfile: Dockerfile
@@ -44,6 +64,8 @@ services:
     container_name: license
     profiles:
       - sv
+    depends_on:
+      - pg_db
     build:
       context: ./services/license/src
       dockerfile: Dockerfile
@@ -51,23 +73,10 @@ services:
       - backend-network
       - db-network
 
-  account_db:
-    image: postgres:15
-    container_name: account_db
-    profiles:
-      - db
-    restart: always
-    networks:
-      - db-network
-    volumes:
-      - ./services/account/db/data:/var/lib/postgres/data
-      - ./services/account/db/config/postgresql.conf:/etc/postgresql/postgresql.conf
-      - ./services/account/db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
-      - ./services/account/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
 networks:
   frontend-network:
-    driver: bridge
+    driver: host
   backend-network:
     driver: bridge
   db-network:
