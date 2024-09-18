@@ -4,9 +4,15 @@ version: '3'
 services:
   api_gateway:
     image: nginx
-    container_name: 'api_gateway'
+    container_name: api_gateway
     profiles:
       - gateway
+      - all
+    restart: always
+    depends_on:
+      - account
+      - order
+      - license
     volumes:
       - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf
     ports:
@@ -20,22 +26,27 @@ services:
     container_name: pg_db
     profiles:
       - db
+      - all
     restart: always
     ports:
       - 5431:5432
     networks:
       - db-network
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       - ./db/data:/var/lib/postgres/data
-      - .db/config/postgresql.conf:/etc/postgresql/postgresql.conf
-      - .db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
-      - .db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   account:
     image: account:1.0
     container_name: account
     profiles:
       - sv
+      - all
     depends_on:
       - pg_db
     build:
@@ -50,6 +61,7 @@ services:
     container_name: order
     profiles:
       - sv
+      - all
     depends_on:
       - pg_db
     build:
@@ -64,6 +76,7 @@ services:
     container_name: license
     profiles:
       - sv
+      - all
     depends_on:
       - pg_db
     build:
@@ -76,7 +89,7 @@ services:
 
 networks:
   frontend-network:
-    driver: host
+    driver: bridge
   backend-network:
     driver: bridge
   db-network:

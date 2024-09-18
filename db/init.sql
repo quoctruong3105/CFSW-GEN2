@@ -1,11 +1,17 @@
+-- Global user and role setup
 CREATE USER svcfsw WITH ENCRYPTED PASSWORD 'cfsw12345';
 
------------------------------------------------
--- Init database for account service          
------------------------------------------------
-CREATE DATABASE account;
-GRANT ALL PRIVILEGES ON DATABASE account TO svcfsw;
-\connect account
+------------------------------------------------
+-- Init database for account service
+------------------------------------------------
+CREATE DATABASE "account";
+GRANT ALL PRIVILEGES ON DATABASE "account" TO svcfsw;
+
+\c "account"
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
+
 CREATE TABLE IF NOT EXISTS accounts
 (
     id serial PRIMARY KEY,
@@ -13,20 +19,26 @@ CREATE TABLE IF NOT EXISTS accounts
     password varchar(255) NOT NULL,
     last_login text,
     last_logout text
-)
+);
 
------------------------------------------------
+------------------------------------------------
 -- Init database for order service
------------------------------------------------
-CREATE DATABASE order;
-GRANT ALL PRIVILEGES ON DATABASE order TO svcfsw;
-\connect order
+------------------------------------------------
+CREATE DATABASE "order";
+GRANT ALL PRIVILEGES ON DATABASE "order" TO svcfsw;
+
+\c "order"
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
+
 CREATE TABLE IF NOT EXISTS banks
 (
     acqid text,
     accountno text,
     accountname text
-)
+);
+
 CREATE TABLE IF NOT EXISTS bills
 (
     receipt_id varchar(255),
@@ -37,15 +49,20 @@ CREATE TABLE IF NOT EXISTS bills
     cash_receive integer,
     cash_change integer,
     is_cash boolean
-)
+);
 
------------------------------------------------
+------------------------------------------------
 -- Init database for license service
------------------------------------------------
-CREATE DATABASE license;
-GRANT ALL PRIVILEGES ON DATABASE license TO svcfsw;
-\connect license
+------------------------------------------------
+CREATE DATABASE "license";
+GRANT ALL PRIVILEGES ON DATABASE "license" TO svcfsw;
+
+\c "license"
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
+
 CREATE TABLE IF NOT EXISTS license_keys
 (
     key text
-)
+);
