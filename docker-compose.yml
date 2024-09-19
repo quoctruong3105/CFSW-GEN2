@@ -28,6 +28,7 @@ services:
     profiles:
       - sv
       - all
+      - account
     depends_on:
       - pg_db
     build:
@@ -43,6 +44,7 @@ services:
     profiles:
       - sv
       - all
+      - order
     depends_on:
       - pg_db
     build:
@@ -58,6 +60,7 @@ services:
     profiles:
       - sv
       - all
+      - license
     depends_on:
       - pg_db
     build:
