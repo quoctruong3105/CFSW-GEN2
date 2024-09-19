@@ -2,25 +2,6 @@
 version: '3'
 
 services:
-  api_gateway:
-    image: nginx
-    container_name: api_gateway
-    profiles:
-      - gateway
-      - all
-    restart: always
-    depends_on:
-      - account
-      - order
-      - license
-    volumes:
-      - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "8080:80"
-    networks:
-      - frontend-network
-      - backend-network
-
   pg_db:
     image: postgres:15
     container_name: pg_db
@@ -86,6 +67,24 @@ services:
       - backend-network
       - db-network
 
+  api_gateway:
+    image: nginx:1.23.3
+    container_name: api_gateway
+    profiles:
+      - gateway
+      - all
+    restart: unless-stopped
+    depends_on:
+      - account
+      - order
+      - license
+    volumes:
+      - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:80"
+    networks:
+      - frontend-network
+      - backend-network
 
 networks:
   frontend-network:

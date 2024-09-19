@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS accounts
     last_logout text
 );
 
+INSERT INTO accounts (username, password, last_login, last_logout)
+VALUES
+    ('john_doe', '12345', '2024-09-18 09:00:00', '2024-09-18 17:00:00'),
+    ('jane_smith', '67890', '2024-09-18 08:30:00', '2024-09-18 16:30:00'),
+    ('alice_wong', 'AlicePassword', NULL, NULL);
+
 ------------------------------------------------
 -- Init database for order service
 ------------------------------------------------
