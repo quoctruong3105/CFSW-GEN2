@@ -96,7 +96,7 @@ pipeline {
                 sh '''
                     docker-compose -f auto-test.yml down
                     docker-compose down
-                    docker system prune -a
+                    docker system prune -a -f
                 '''
                 cleanWs()
             }
