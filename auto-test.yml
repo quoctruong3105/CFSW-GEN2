@@ -1,0 +1,49 @@
+---
+version: '3'
+
+services:
+  account_test:
+    image: account_test:1.0
+    container_name: account_test
+    profiles:
+      - allservice
+      - account
+    build:
+      context: ./services/account/test
+      dockerfile: Dockerfile
+    volumes:
+      - ./services/account/test/result:/test/result
+    networks:
+      - backend-network
+
+  order_test:
+    image: order_test:1.0
+    container_name: order_test
+    profiles:
+      - allservice
+      - order
+    build:
+      context: ./services/order/test
+      dockerfile: Dockerfile
+    volumes:
+      - ./services/order/test/result:/test/result
+    networks:
+      - backend-network
+
+  authorize_test:
+    image: authorize_test:1.0
+    container_name: authorize_test
+    profiles:
+      - allservice
+      - authorize
+    build:
+      context: ./services/authorize/test
+      dockerfile: Dockerfile
+    volumes:
+      - ./services/authorize/test/result:/test/result
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge

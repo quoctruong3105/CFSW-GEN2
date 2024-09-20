@@ -58,17 +58,17 @@ CREATE TABLE IF NOT EXISTS bills
 );
 
 ------------------------------------------------
--- Init database for license service
+-- Init database for authorize service
 ------------------------------------------------
-CREATE DATABASE "license";
-GRANT ALL PRIVILEGES ON DATABASE "license" TO svcfsw;
+CREATE DATABASE "authorize";
+GRANT ALL PRIVILEGES ON DATABASE "authorize" TO svcfsw;
 
-\c "license"
+\c "authorize"
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
 
-CREATE TABLE IF NOT EXISTS license_keys
+CREATE TABLE IF NOT EXISTS authorize_keys
 (
     key text
 );

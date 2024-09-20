@@ -9,6 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Get DB config from environment variables
+SERVICE_NAME = os.getenv("SERVICE_NAME")
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
@@ -28,13 +29,13 @@ def get_db_connection():
 
 @app.route('/', methods=['GET'])
 def home():
-    return "Hello, World!"
+    return f"Hello from {SERVICE_NAME} service"
 
 @app.route('/test', methods=['GET'])
 def get_data():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM license_keys;')
+    cursor.execute('SELECT * FROM authorize_keys;')
     records = cursor.fetchall()
     cursor.close()
     conn.close()

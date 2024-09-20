@@ -7,29 +7,49 @@ pipeline {
         INFRA_BRANCH = 'infra'
         ACCOUNT_BRANCH = "account"
         ORDER_BRANCH = "order"
-        LICENSE_BRANCH = "license"
+        AUTHORIZE_BRANCH = "authorize"
     }
     stages {
-        stage('Build Master') {
+        stage('Build system') {
             when {
-                branch env.MASTER_BRANCH
+                anyOf {
+                    branch env.MASTER_BRANCH
+                    branch env.INFRA_BRANCH
+                }
             }
             steps {
                 script {
                     echo "Building system..."
-                    sh '''
-                        docker-compose --profile all build
-                    '''
+                    sh 'docker-compose --profile system build'
                 }
             }
         }
-        stage('Test Master') {
+        stage('Deploy system') {
             when {
-                branch env.MASTER_BRANCH
+                anyOf {
+                    branch env.MASTER_BRANCH
+                    branch env.INFRA_BRANCH
+                }
             }
             steps {
                 script {
-                    echo "Running all tests..."
+                    echo "Deploying system..."
+                    sh 'docker-compose --profile system up -d'
+                }
+            }
+        }
+        stage('Test system') {
+            when {
+                anyOf {
+                    branch env.MASTER_BRANCH
+                    branch env.INFRA_BRANCH
+                }
+            }
+            steps {
+                script {
+                    sleep(5)
+                    echo "Testing all services..."
+                    sh 'docker-compose -f auto-test.yml --profile allservice up'
                 }
             }
         }
@@ -40,19 +60,30 @@ pipeline {
             steps {
                 script {
                     echo "Building account service..."
-                    sh '''
-                        docker-compose --profile account build
-                    '''
+                    sh 'docker build -t account:1.0 services/account/src'
                 }
             }
         }
-        stage('Test Service') {
+        stage('Deploy Account Service') {
             when {
-                branch env.DEV_BRANCH
+                branch env.ACCOUNT_BRANCH
             }
             steps {
                 script {
-                    echo "Testing  service..."
+                    echo "Deploying Account service..."
+                    sh 'docker-compose -f auto-test.yml --profile account up -d'
+                }
+            }
+        }
+        stage('Test Account Service') {
+            when {
+                branch env.ACCOUNT_BRANCH
+            }
+            steps {
+                script {
+                    sleep(5)
+                    echo "Testing Account service..."
+                    sh 'docker-compose --profile db -- profile account up'
                 }
             }
         }
@@ -63,8 +94,9 @@ pipeline {
                 // Clean up Docker containers, networks, volumes, and images created by Docker Compose
                 echo "Cleaning up Docker resources..."
                 sh '''
-                    docker-compose down --volumes --remove-orphans
-                    docker system prune -f --volumes
+                    docker-compose -f auto-test.yml down
+                    docker-compose down
+                    docker system prune -a
                 '''
                 cleanWs()
             }

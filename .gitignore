@@ -1,1 +1,8 @@
 db/data/
+services/account/test/result
+services/authorize/test/result
+services/discount/test/result
+services/internet/test/result
+services/item/test/result
+services/inventory/test/result
+services/order/test/result
