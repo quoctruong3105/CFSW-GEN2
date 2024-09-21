@@ -2,6 +2,9 @@ pipeline {
     agent {
         label 'cfsw_gen2_builder'
     }
+    options {
+        disableConcurrentBuilds()
+    }
     environment {
         MASTER_BRANCH = "main"
         INFRA_BRANCH = 'infra'
