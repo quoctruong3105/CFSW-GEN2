@@ -16,6 +16,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
                     }
+                    sh "docker system prune -a -f"
                 }
             }
         }
