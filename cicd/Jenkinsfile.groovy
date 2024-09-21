@@ -19,7 +19,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
                     }
-                    sh "docker system prune -a -f"
+                    sh 'docker system prune -a -f'
                     sleep(5)
                 }
             }
@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying system..."
-                    sh "docker-compose --profile system up -d"
+                    sh "docker-compose --profile system up -d --remove-orphans"
                 }
             }
         }
@@ -67,6 +67,17 @@ pipeline {
                     sleep(5)
                     echo "Testing all services..."
                     sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up -d"
+                }
+            }
+            post {
+                always {
+                    script {
+                        sh """
+                            docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice down
+                            docker-compose --profile system down
+                            sleep 5
+                        """
+                    }
                 }
             }
         }
@@ -88,7 +99,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying ${env.SERVICE} service..."
-                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up -d"
+                    sh "docker-compose --profile db --profile ${env.SERVICE} up -d --remove-orphans"
                 }
             }
         }
@@ -100,7 +111,18 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing ${env.SERVICE} service..."
-                    sh "docker-compose --profile db --profile ${env.SERVICE} up -d"
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up -d"
+                }
+            }
+            post {
+                always {
+                    script {
+                        sh """
+                            docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} down
+                            docker-compose --profile db --profile ${env.SERVICE} down
+                            sleep 5
+                        """
+                    }
                 }
             }
         }
@@ -111,9 +133,8 @@ pipeline {
                 // Clean up Docker containers, networks, volumes, and images created by Docker Compose
                 echo "Cleaning up Docker resources..."
                 sh '''
-                    docker-compose -f auto-test.yml down
-                    docker-compose down
                     docker system prune -a -f
+                    sleep 5
                 '''
                 cleanWs()
             }
