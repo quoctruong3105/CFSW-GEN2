@@ -19,7 +19,7 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
                     }
-                    sh "docker system prune -a -f"
+                    sh 'docker system prune -a -f'
                     sleep(5)
                 }
             }
@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying system..."
-                    sh "docker-compose --profile system up -d"
+                    sh "docker-compose --profile system up -d --remove-orphans"
                 }
             }
         }
@@ -88,7 +88,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying ${env.SERVICE} service..."
-                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up -d"
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up -d --remove-orphans"
                 }
             }
         }
