@@ -2,6 +2,9 @@ pipeline {
     agent {
         label 'cfsw_gen2_builder'
     }
+    options {
+        disableConcurrentBuilds()
+    }
     environment {
         MASTER_BRANCH = "main"
         INFRA_BRANCH = 'infra'
@@ -16,6 +19,8 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
                     }
+                    sh "docker system prune -a -f"
+                    sleep(5)
                 }
             }
         }
