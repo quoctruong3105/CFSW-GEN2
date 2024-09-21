@@ -5,85 +5,97 @@ pipeline {
     environment {
         MASTER_BRANCH = "main"
         INFRA_BRANCH = 'infra'
-        ACCOUNT_BRANCH = "account"
-        ORDER_BRANCH = "order"
-        AUTHORIZE_BRANCH = "authorize"
+        SERVICE_BRANCH_PREFIX = "sv"
+        AUTO_TEST_COMPOSE_FILE = "auto-test.yml"
+        TAG = "1.0"
     }
     stages {
+        stage ('Prebuild') {
+            steps {
+                script {
+                    if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
+                        env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
+                    }
+                }
+            }
+        }
         stage('Build system') {
             when {
                 anyOf {
-                    branch env.MASTER_BRANCH
-                    branch env.INFRA_BRANCH
+                    branch "${env.MASTER_BRANCH}"
+                    branch "${env.INFRA_BRANCH}"
+                    changeRequest()
                 }
             }
             steps {
                 script {
                     echo "Building system..."
-                    sh 'docker-compose --profile system build'
+                    sh "docker-compose --profile system build"
                 }
             }
         }
         stage('Deploy system') {
             when {
                 anyOf {
-                    branch env.MASTER_BRANCH
-                    branch env.INFRA_BRANCH
+                    branch "${env.MASTER_BRANCH}"
+                    branch "${env.INFRA_BRANCH}"
+                    changeRequest()
                 }
             }
             steps {
                 script {
                     echo "Deploying system..."
-                    sh 'docker-compose --profile system up -d'
+                    sh "docker-compose --profile system up -d"
                 }
             }
         }
         stage('Test system') {
             when {
                 anyOf {
-                    branch env.MASTER_BRANCH
-                    branch env.INFRA_BRANCH
+                    branch "${env.MASTER_BRANCH}"
+                    branch "${env.INFRA_BRANCH}"
+                    changeRequest()
                 }
             }
             steps {
                 script {
                     sleep(5)
                     echo "Testing all services..."
-                    sh 'docker-compose -f auto-test.yml --profile allservice up'
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up -d"
                 }
             }
         }
-        stage('Build Account Service') {
+        stage('Build ${env.SERVICE} Service') {
             when {
-                branch env.ACCOUNT_BRANCH
+                branch "${env.SERVICE_BRANCH_PREFIX}/*"
             }
             steps {
                 script {
-                    echo "Building account service..."
-                    sh 'docker build -t account:1.0 services/account/src'
+                    echo "Building ${env.SERVICE} service..."
+                    sh "docker build -t ${env.SERVICE}:${env.TAG} services/${env.SERVICE}/src"
                 }
             }
         }
-        stage('Deploy Account Service') {
+        stage('Deploy ${env.SERVICE} Service') {
             when {
-                branch env.ACCOUNT_BRANCH
+                branch "${env.SERVICE_BRANCH_PREFIX}/*"
             }
             steps {
                 script {
-                    echo "Deploying Account service..."
-                    sh 'docker-compose -f auto-test.yml --profile account up -d'
+                    echo "Deploying ${env.SERVICE} service..."
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up -d"
                 }
             }
         }
-        stage('Test Account Service') {
+        stage('Test ${env.SERVICE} Service') {
             when {
-                branch env.ACCOUNT_BRANCH
+                branch "${env.SERVICE_BRANCH_PREFIX}/*"
             }
             steps {
                 script {
                     sleep(5)
-                    echo "Testing Account service..."
-                    sh 'docker-compose --profile db -- profile account up'
+                    echo "Testing ${env.SERVICE} service..."
+                    sh "docker-compose --profile db --profile ${env.SERVICE} up -d"
                 }
             }
         }
