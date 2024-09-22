@@ -15,7 +15,7 @@ TODO
 TODO
 
 ## CICDCT
-TODO
+![CICD-flow](https://github.com/user-attachments/assets/1c096cad-aec6-4686-96de-2cf55e702a94)
 
 ## HOW TO RUN ON LOCAL
 
