@@ -53,8 +53,11 @@ services:
     build:
       context: ./services/account/src
       dockerfile: Dockerfile
-    # ports:
-    #   - 5000:5000
+    volumes:
+      - ./services/account/src:/app
+    ports:
+      - "5000:5000"
+      - "5600:5600"  # For Debugging
     networks:
       - backend-network
       - db-network
