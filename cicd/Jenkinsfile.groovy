@@ -10,6 +10,8 @@ pipeline {
         INFRA_BRANCH = 'infra'
         SERVICE_BRANCH_PREFIX = "sv"
         AUTO_TEST_COMPOSE_FILE = "auto-test.yml"
+        PROD_COMPOSE_FILE = "docker-compose.prod.yml"
+        PROJECT_ENV_FILE = "project.env"
         TAG = "1.0"
     }
     stages {
@@ -19,8 +21,6 @@ pipeline {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
                     }
-                    sh 'docker system prune -a -f'
-                    sleep(5)
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     echo "Building system..."
-                    sh "docker-compose --profile system build"
+                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile system build"
                 }
             }
         }
@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying system..."
-                    sh "docker-compose --profile system up -d --remove-orphans"
+                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile system up -d --remove-orphans"
                 }
             }
         }
@@ -74,7 +74,7 @@ pipeline {
                     script {
                         sh """
                             docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice down
-                            docker-compose --profile system down
+                            docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile system down
                             sleep 5
                         """
                     }
@@ -99,7 +99,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying ${env.SERVICE} service..."
-                    sh "docker-compose --profile db --profile ${env.SERVICE} up -d --remove-orphans"
+                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} up -d --remove-orphans"
                 }
             }
         }
@@ -118,7 +118,7 @@ pipeline {
                 always {
                     script {
                         sh """
-                            docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} down
+                            docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} down
                             docker-compose --profile db --profile ${env.SERVICE} down
                             sleep 5
                         """

@@ -1,0 +1,43 @@
+version: '3.8'
+
+x-app-service: &app_service
+  image: ${APP_NAME}:${APP_TAG}
+  build:
+    context: ./services/${APP_NAME}/src
+    dockerfile: Dockerfile
+  container_name: ${APP_NAME}
+  depends_on:
+    - pg_db
+  volumes:
+    - ./services/${APP_NAME}/src:/app
+  ports:
+    - "${APP_PORT}:5000"
+    - "${DEBUG_PORT}:5600"
+  networks:
+    - db-network
+  command: [ "python3", "-m", "debugpy", "--listen", "0.0.0.0:${DEBUG_PORT}", "--wait-for-client", "app.py" ]
+
+services:
+  pg_db:
+    image: postgres:${DB_VERSION}
+    container_name: pg_db
+    restart: always
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - db-network
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./db/data:/var/lib/postgres/data
+      - ./db/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    <<: *app_service
+
+networks:
+  db-network:
+    driver: bridge

@@ -21,5 +21,3 @@ RUN pip3 install flask psycopg2-binary python-dotenv debugpy
 WORKDIR /app
 
 COPY . .
-
-CMD [ "python3", "-m", "debugpy", "--listen", "0.0.0.0:5600", "--wait-for-client", "app.py" ]

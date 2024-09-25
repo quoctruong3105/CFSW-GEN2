@@ -21,16 +21,16 @@ TODO
 
 ### Deploy and Test one or more specific service
 ```bash
-docker-compose --profile db --profile account --profile order up
+docker-compose -f docker-compose.prod.yml --env-file project.env --profile db --profile order up
 ```
-Here we deploy database and 2 services: account, order. Then, to test these services:
+Here we deploy database and account service. Then, to test account service:
 ```bash
-dock-compose -f auto-test.yml --profile account --profile order up
+docker-compose -f auto-test.yml --profile account up
 ```
 
 ### Deploy and Test all services
 ```bash
-docker-compose --profile system up
+docker-compose -f docker-compose.prod.yml --env-file project.env --profile system up
 ```
 Then, test all services:
 ```bash

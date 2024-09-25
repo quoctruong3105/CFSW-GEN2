@@ -15,10 +15,8 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install flask psycopg2-binary python-dotenv
+RUN pip3 install flask psycopg2-binary python-dotenv debugpy
 
 WORKDIR /app
 
 COPY . .
-
-CMD [ "python3", "app.py" ]

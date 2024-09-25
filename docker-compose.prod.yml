@@ -1,21 +1,28 @@
----
-version: '3'
+version: '3.8'
+
+x-app-service: &app_service
+  depends_on:
+    - pg_db
+  networks:
+    - db-network
+    - backend-network
+  command: [ "python3", "app.py" ]
 
 services:
   pg_db:
-    image: postgres:15
+    image: postgres:${DB_VERSION}
     container_name: pg_db
+    restart: always
     profiles:
       - system
       - db
-    restart: always
     ports:
-      - 5431:5432
+      - ${DB_PORT}:5432
     networks:
       - db-network
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./db/data:/var/lib/postgres/data
       - ./db/config/postgresql.conf:/etc/postgresql/postgresql.conf
@@ -25,10 +32,9 @@ services:
   api_gateway:
     image: nginx:1.23.3
     container_name: api_gateway
+    restart: unless-stopped
     profiles:
       - system
-      - gateway
-    restart: unless-stopped
     depends_on:
       - account
       - order
@@ -42,61 +48,43 @@ services:
       - backend-network
 
   account:
-    image: account:1.0
-    container_name: account
-    profiles:
-      - system
-      - allservices
-      - account
-    depends_on:
-      - pg_db
+    image: account:${APP_TAG}
     build:
       context: ./services/account/src
       dockerfile: Dockerfile
-    volumes:
-      - ./services/account/src:/app
-    ports:
-      - "5000:5000"
-      - "5600:5600"  # For Debugging
-    networks:
-      - backend-network
-      - db-network
-
-  order:
-    image: order:1.0
-    container_name: order
+    container_name: account
     profiles:
       - system
-      - allservices
-      - order
-    depends_on:
-      - pg_db
+      - account
+    volumes:
+      - ./services/account/src:/app
+    <<: *app_service
+
+  order:
+    image: account:${APP_TAG}
     build:
       context: ./services/order/src
       dockerfile: Dockerfile
-    # ports:
-    #   - 5001:5000
-    networks:
-      - backend-network
-      - db-network
-
-  authorize:
-    image: authorize:1.0
-    container_name: authorize
+    container_name: order
     profiles:
       - system
-      - allservices
-      - authorize
-    depends_on:
-      - pg_db
+      - order
+    volumes:
+      - ./services/order/src:/app
+    <<: *app_service
+
+  authorize:
+    image: authorize:${APP_TAG}
     build:
       context: ./services/authorize/src
       dockerfile: Dockerfile
-    # ports:
-    #   - 5002:5000
-    networks:
-      - backend-network
-      - db-network
+    container_name: authorize
+    profiles:
+      - system
+      - authorize
+    volumes:
+      - ./services/authorize/src:/app
+    <<: *app_service
 
 networks:
   frontend-network:
