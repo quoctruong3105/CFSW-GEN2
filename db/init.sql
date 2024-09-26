@@ -17,15 +17,16 @@ CREATE TABLE IF NOT EXISTS accounts
     id serial PRIMARY KEY,
     username varchar(255) NOT NULL,
     password varchar(255) NOT NULL,
+    role varchar(25) NOT NULL,
     last_login text,
     last_logout text
 );
 
-INSERT INTO accounts (username, password, last_login, last_logout)
+INSERT INTO accounts (username, password, role, last_login, last_logout)
 VALUES
-    ('john_doe', '12345', '2024-09-18 09:00:00', '2024-09-18 17:00:00'),
-    ('jane_smith', '67890', '2024-09-18 08:30:00', '2024-09-18 16:30:00'),
-    ('alice_wong', 'AlicePassword', NULL, NULL);
+    ('john_doe', '12345', 'admin','2024-09-18 09:00:00', '2024-09-18 17:00:00'),
+    ('jane_smith', '67890', 'cashier', '2024-09-18 08:30:00', '2024-09-18 16:30:00'),
+    ('alice_wong', 'AlicePassword', 'CEO' ,NULL, NULL);
 
 ------------------------------------------------
 -- Init database for order service
