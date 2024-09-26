@@ -12,7 +12,8 @@ pipeline {
         AUTO_TEST_COMPOSE_FILE = "auto-test.yml"
         PROD_COMPOSE_FILE = "docker-compose.prod.yml"
         PROJECT_ENV_FILE = "project.env"
-        TAG = "1.0"
+        DOCKER_REGISTRY = "docker.io"
+        DOCKER_CRED = credentials('docker-hub-token')
     }
     stages {
         stage ('Prebuild') {
@@ -20,6 +21,7 @@ pipeline {
                 script {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
+                        env.TAG = sh (script: "git rev-parse --short HEAD", returnStdout: true)
                     }
                 }
             }
@@ -88,7 +90,7 @@ pipeline {
             steps {
                 script {
                     echo "Building ${env.SERVICE} service..."
-                    sh "docker build -t ${env.SERVICE}:${env.TAG} services/${env.SERVICE}/src"
+                    sh "docker build -t ${env.SERVICE}:latest services/${env.SERVICE}/src"
                 }
             }
         }
@@ -122,6 +124,28 @@ pipeline {
                             docker-compose --profile db --profile ${env.SERVICE} down
                             sleep 5
                         """
+                    }
+                }
+            }
+        }
+        stage('Release ${env.SERVICE} Service') {
+            when {
+                branch "${env.SERVICE_BRANCH_PREFIX}/*"
+            }
+            steps {
+                script {
+                    def tagCurrentCommit = "${env.DOCKER_REGISTRY}/${env.SERVICE}:${env.TAG}"
+                    def tagLatest = "${env.DOCKER_REGISTRY}/${env.SERVICE}:latest"
+                    sh "echo ${DOCKER_CRED_PSW} | docker login -u ${DOCKER_CRED_USR} --password-stdin ${DOCKER_REGISTRY}"
+                    if (currentBuild.result == 'SUCCESS') {
+                        sh """
+                            docker tag ${tagLatest} ${tagCurrentCommit}
+                            docker push ${tagCurrentCommit}
+                            docker push ${tagLatest}
+                        """
+                    }
+                    else {
+                        error("Docker login faliled!")
                     }
                 }
             }
