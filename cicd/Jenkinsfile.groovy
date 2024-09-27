@@ -135,15 +135,16 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        def tagCurrentCommit = "${DOCKER_REGISTRY}/${DOCKER_USER}/${env.SERVICE}:${env.TAG}"
-                        def tagLatest = "${DOCKER_REGISTRY}/${DOCKER_USER}/${env.SERVICE}:latest"
+                        def tagCurrentCommit = "${DOCKER_USER}/${env.SERVICE}:${env.TAG}"
+                        def tagLatest = "${DOCKER_USER}/${env.SERVICE}:latest"
                         echo "Logging into Docker Registry..."
                         sh """
                             echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin ${DOCKER_REGISTRY}
                         """
                         echo "Tagging and pushing Docker images..."
                         sh """
-                            docker tag ${tagLatest} ${tagCurrentCommit}
+                            docker tag ${env.SERVICE}:latest ${tagLatest}
+                            docker tag ${env.SERVICE}:latest ${tagCurrentCommit}
                             docker push ${tagCurrentCommit}
                             docker push ${tagLatest}
                         """
