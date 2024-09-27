@@ -121,7 +121,7 @@ pipeline {
                     script {
                         sh """
                             docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} down
-                            docker-compose --profile db --profile ${env.SERVICE} down
+                            docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile db --profile ${env.SERVICE} down
                             sleep 5
                         """
                     }
@@ -134,18 +134,19 @@ pipeline {
             }
             steps {
                 script {
-                    def tagCurrentCommit = "${env.DOCKER_REGISTRY}/${env.SERVICE}:${env.TAG}"
-                    def tagLatest = "${env.DOCKER_REGISTRY}/${env.SERVICE}:latest"
-                    sh "echo ${DOCKER_CRED_PSW} | docker login -u ${DOCKER_CRED_USR} --password-stdin ${DOCKER_REGISTRY}"
-                    if (currentBuild.result == 'SUCCESS') {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        def tagCurrentCommit = "${DOCKER_REGISTRY}/${DOCKER_USER}/${env.SERVICE}:${env.TAG}"
+                        def tagLatest = "${DOCKER_REGISTRY}/${DOCKER_USER}/${env.SERVICE}:latest"
+                        echo "Logging into Docker Registry..."
+                        sh """
+                            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin ${DOCKER_REGISTRY}
+                        """
+                        echo "Tagging and pushing Docker images..."
                         sh """
                             docker tag ${tagLatest} ${tagCurrentCommit}
                             docker push ${tagCurrentCommit}
                             docker push ${tagLatest}
                         """
-                    }
-                    else {
-                        error("Docker login faliled!")
                     }
                 }
             }
