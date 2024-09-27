@@ -31,15 +31,5 @@ def get_db_connection():
 def home():
     return f"Hello from {SERVICE_NAME} service"
 
-@app.route('/test', methods=['GET'])
-def get_data():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM authorize_keys;')
-    records = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(records)
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=False)

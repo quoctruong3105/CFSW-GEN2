@@ -21,7 +21,7 @@ TODO
 
 ### Deploy and Test one or more specific service
 ```bash
-docker-compose -f docker-compose.prod.yml --env-file project.env --profile db --profile order up
+docker-compose -f docker-compose.test.yml --env-file project.env --profile db --profile account up
 ```
 Here we deploy database and account service. Then, to test account service:
 ```bash
@@ -30,9 +30,11 @@ docker-compose -f auto-test.yml --profile account up
 
 ### Deploy and Test all services
 ```bash
-docker-compose -f docker-compose.prod.yml --env-file project.env --profile system up
+docker-compose -f docker-compose.test.yml --env-file project.env --profile system up
 ```
 Then, test all services:
 ```bash
 docker-compose -f auto-test.yml --profile allservice up
 ```
+
+### Run in debug mode (support only 1 service each time)

@@ -20,5 +20,3 @@ WORKDIR /test/testcases
 COPY /testcases .
 
 WORKDIR /test
-
-CMD [ "python3", "-m", "robot", "-d", "result/", "testcases/api_test.robot" ]

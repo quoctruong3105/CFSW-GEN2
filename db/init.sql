@@ -1,16 +1,14 @@
 -- Global user and role setup
 CREATE USER svcfsw WITH ENCRYPTED PASSWORD 'cfsw12345';
+ALTER USER svcfsw WITH SUPERUSER;
+ALTER USER postgres WITH PASSWORD 'cfsw12345';
 
 ------------------------------------------------
 -- Init database for account service
 ------------------------------------------------
 CREATE DATABASE "account";
-GRANT ALL PRIVILEGES ON DATABASE "account" TO svcfsw;
 
 \c "account"
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
 
 CREATE TABLE IF NOT EXISTS accounts
 (
@@ -32,12 +30,8 @@ VALUES
 -- Init database for order service
 ------------------------------------------------
 CREATE DATABASE "order";
-GRANT ALL PRIVILEGES ON DATABASE "order" TO svcfsw;
 
 \c "order"
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
 
 CREATE TABLE IF NOT EXISTS banks
 (
@@ -62,12 +56,8 @@ CREATE TABLE IF NOT EXISTS bills
 -- Init database for authorize service
 ------------------------------------------------
 CREATE DATABASE "authorize";
-GRANT ALL PRIVILEGES ON DATABASE "authorize" TO svcfsw;
 
 \c "authorize"
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO svcfsw;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO svcfsw;
 
 CREATE TABLE IF NOT EXISTS authorize_keys
 (

@@ -13,6 +13,9 @@ services:
     image: postgres:${DB_VERSION}
     container_name: pg_db
     restart: always
+    profiles:
+      - system
+      - db
     ports:
       - ${DB_PORT}:5432
     networks:
@@ -30,6 +33,8 @@ services:
     image: nginx:1.23.3
     container_name: api_gateway
     restart: unless-stopped
+    profiles:
+      - system
     depends_on:
       - account
     volumes:
@@ -41,10 +46,42 @@ services:
       - backend-network
 
   account:
-    image: ${DOCKER_REPO}/account:${APP_TAG}
+    image: account:${APP_TAG}
+    build:
+      context: ./services/account/src
+      dockerfile: Dockerfile
     container_name: account
+    profiles:
+      - system
+      - account
     volumes:
       - ./services/account/src:/app
+    <<: *app_service
+
+  order:
+    image: order:${APP_TAG}
+    build:
+      context: ./services/order/src
+      dockerfile: Dockerfile
+    container_name: order
+    profiles:
+      - system
+      - order
+    volumes:
+      - ./services/order/src:/app
+    <<: *app_service
+
+  authorize:
+    image: authorize:${APP_TAG}
+    build:
+      context: ./services/authorize/src
+      dockerfile: Dockerfile
+    container_name: authorize
+    profiles:
+      - system
+      - authorize
+    volumes:
+      - ./services/authorize/src:/app
     <<: *app_service
 
 networks:

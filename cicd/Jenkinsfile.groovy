@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     echo "Building system..."
-                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile system build"
+                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} build"
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying system..."
-                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile system up -d --remove-orphans"
+                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} up -d --remove-orphans"
                 }
             }
         }
@@ -76,7 +76,7 @@ pipeline {
                     script {
                         sh """
                             docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice down
-                            docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile system down
+                            docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} down
                             sleep 5
                         """
                     }

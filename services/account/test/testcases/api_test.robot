@@ -3,7 +3,7 @@ Library  RequestsLibrary
 Library  Collections
 
 *** Variables ***
-${BASE_URL}    http://localhost:5000
+${BASE_URL}    http://account:5000
 ${EXPECTED_MESSAGE}    User created successfully
 ${EXPECTED_USER_ID}    4
 

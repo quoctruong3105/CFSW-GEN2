@@ -32,16 +32,6 @@ def get_db_connection():
 def home():
     return f"Hello from {SERVICE_NAME} service"
 
-@app.route('/test', methods=['GET'])
-def get_data():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM accounts;')
-    records = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(records)
-
 @app.route('/create_user', methods=['POST'])
 def create_user():
     data = request.json  # Expecting JSON input with 'username' and 'password'
