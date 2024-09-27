@@ -4,9 +4,9 @@ Library  Collections
 
 *** Variables ***
 ${BASE_URL}    http://account:5000
-${EXPECTED_MESSAGE}    User created successfully
-${EXPECTED_USER_ID}    4
-
+${EXPECTED_MESSAGE_CREATE_USER}    User created successfully
+${EXPECTED_MESSAGE_CHANGE_PASS}    Password changed successfully
+${EXPECTED_MESSAGE_DELETE_USER}    User deleted successfully
 *** Test Cases ***
 Test Home Page
     [Documentation]  Verify that the home page returns the correct message.
@@ -31,8 +31,45 @@ Test Create User
 
     # Parse and validate JSON response
     ${response_json}=    Set Variable    ${response.json()}
-    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE}
+    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_CREATE_USER}
 
+    Log Status and JSON    ${response}
+
+Test Change Password
+    [Documentation]    Test successful password change.
+
+    ${payload}=    Create Dictionary    username=vu    old_password=123    new_password=321
+
+    ${response}=    PUT    ${BASE_URL}/change_password    json=${payload}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_CHANGE_PASS}
+
+    Log Status and JSON    ${response}
+
+Test Delete User
+    [Documentation]    Test successful user deletion with valid credentials.
+
+    ${payload}=    Create Dictionary    username=vu    password=321
+
+    ${response}=    DELETE    ${BASE_URL}/delete_user    json=${payload}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_DELETE_USER}
+
+    Log Status and JSON    ${response}
+
+*** Keywords ***
+
+Log Status and JSON
+    [Arguments]    ${response}
+
+    # Convert the response JSON to a string for logging
+    ${response_json}=    Convert To String    ${response.json()}
     # Log response details for debugging
     Log To Console    Status Code: ${response.status_code}
     Log To Console    Response JSON: ${response_json}
