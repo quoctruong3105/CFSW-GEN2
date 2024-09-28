@@ -34,9 +34,8 @@ def home():
 
 @app.route('/create_user', methods=['POST'])
 def create_user():
-    data = request.json  # Expecting JSON input with 'username' and 'password'
+    data = request.json
 
-    # Get username and password from request
     username = data.get('username')
     password = data.get('password')
     role     = data.get('role')
@@ -48,7 +47,6 @@ def create_user():
     hashed_password = generate_password_hash(password)
 
     try:
-        # Insert new user into the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -71,7 +69,7 @@ def create_user():
 
 @app.route('/change_password', methods=['PUT'])
 def change_password():
-    data = request.json  # Expecting JSON input with 'username', 'old_password', and 'new_password'
+    data = request.json
 
     username = data.get('username')
     old_password = data.get('old_password')
@@ -81,7 +79,6 @@ def change_password():
         return jsonify({"error": "Username, old password, and new password are required"}), 400
 
     try:
-        # Connect to the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -119,7 +116,7 @@ def change_password():
 
 @app.route('/delete_user', methods=['DELETE'])
 def delete_user():
-    data = request.json  # Expecting JSON input with 'username' and 'password'
+    data = request.json
 
     username = data.get('username')
     password = data.get('password')
@@ -128,7 +125,6 @@ def delete_user():
         return jsonify({"error": "Username and password are required"}), 400
 
     try:
-        # Connect to the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -161,6 +157,85 @@ def delete_user():
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/getlastlogin/<username>', methods=['GET'])
+def get_last_login(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch the last login time from the database
+        cursor.execute("SELECT last_login FROM accounts WHERE username = %s", (username,))
+        result = cursor.fetchone()
+
+        if result is None:
+            return jsonify({"error": "User not found"}), 404
+
+        last_login = result[0]
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"last_login": last_login}), 200
+
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/getlastlogout/<username>', methods=['GET'])
+def get_last_logout(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch last logout time
+        cursor.execute("SELECT last_logout FROM accounts WHERE username = %s", (username,))
+        result = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if result is None:
+            return jsonify({"error": "User not found"}), 404
+
+        last_logout = result[0]
+
+        return jsonify({"username": username, "last_logout": last_logout}), 200
+
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/verifyLogin', methods=['POST'])
+def verify_login():
+    data = request.json
+
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT password FROM accounts WHERE username = %s", (username,))
+        result = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if result is None:
+            return jsonify({"error": "User not found"}), 404
+
+        stored_password = result[0]
+
+        # Check if the provided password matches the one in the database
+        if not check_password_hash(stored_password, password):
+            return jsonify({"error": "Incorrect password"}), 401
+        else:
+            return jsonify({"message": "Login successful"}), 200
+
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=False)
