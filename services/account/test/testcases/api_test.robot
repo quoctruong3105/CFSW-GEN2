@@ -7,6 +7,12 @@ ${BASE_URL}    http://account:5000
 ${EXPECTED_MESSAGE_CREATE_USER}    User created successfully
 ${EXPECTED_MESSAGE_CHANGE_PASS}    Password changed successfully
 ${EXPECTED_MESSAGE_DELETE_USER}    User deleted successfully
+${USERNAME}          john_doe
+${LAST_LOGIN_AD}     2024-09-18 09:00:00
+${LAST_LOGOUT_AD}    2024-09-18 17:00:00
+${EXPECTED_MESSAGE_VERIFY_LOGIN}    Login successful
+
+
 *** Test Cases ***
 Test Home Page
     [Documentation]  Verify that the home page returns the correct message.
@@ -32,6 +38,20 @@ Test Create User
     # Parse and validate JSON response
     ${response_json}=    Set Variable    ${response.json()}
     Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_CREATE_USER}
+
+    Log Status and JSON    ${response}
+
+Test Verify Login
+    [Documentation]    This test case checks the verifyLogin API.
+
+
+    ${payload}=          Create Dictionary    username=vu    password=123
+    ${response}=      POST    ${BASE_URL}/verifyLogin    json=${payload}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_VERIFY_LOGIN}
 
     Log Status and JSON    ${response}
 
@@ -63,8 +83,32 @@ Test Delete User
 
     Log Status and JSON    ${response}
 
-*** Keywords ***
+Test Get Last Login
+    [Documentation]    This test case checks the getlastlogin API.
 
+    ${response}=      GET     ${BASE_URL}/getlastlogin/${USERNAME}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['last_login']}    ${LAST_LOGIN_AD}
+
+    Log Status and JSON    ${response}
+
+Test Get Last Logout
+    [Documentation]    This test case checks the getlastlogout API.
+
+    ${response}=      GET     ${BASE_URL}/getlastlogout/${USERNAME}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['last_logout']}    ${LAST_LOGOUT_AD}
+
+    Log Status and JSON    ${response}
+
+
+*** Keywords ***
 Log Status and JSON
     [Arguments]    ${response}
 
