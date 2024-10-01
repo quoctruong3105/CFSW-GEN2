@@ -58,30 +58,17 @@ services:
       - ./services/account/src:/app
     <<: *app_service
 
-  order:
-    image: order:${APP_TAG}
+  inventory:
+    image: inventory:${APP_TAG}
     build:
-      context: ./services/order/src
+      context: ./services/inventory/src
       dockerfile: Dockerfile
-    container_name: order
+    container_name: inventory
     profiles:
       - system
-      - order
+      - inventory
     volumes:
-      - ./services/order/src:/app
-    <<: *app_service
-
-  authorize:
-    image: authorize:${APP_TAG}
-    build:
-      context: ./services/authorize/src
-      dockerfile: Dockerfile
-    container_name: authorize
-    profiles:
-      - system
-      - authorize
-    volumes:
-      - ./services/authorize/src:/app
+      - ./services/inventory/src:/app
     <<: *app_service
 
 networks:

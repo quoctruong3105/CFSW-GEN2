@@ -68,7 +68,7 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing all services..."
-                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up -d"
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up"
                 }
             }
             post {
@@ -113,7 +113,7 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing ${env.SERVICE} service..."
-                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up -d"
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up"
                 }
             }
             post {
