@@ -20,32 +20,6 @@ services:
       - ./services/account/test/result:/test/result
     <<: *test_service
 
-  order_test:
-    image: order_test:1.0
-    container_name: order_test
-    profiles:
-      - allservice
-      - order
-    build:
-      context: ./services/order/test
-      dockerfile: Dockerfile
-    volumes:
-      - ./services/order/test/result:/test/result
-    <<: *test_service
-
-  authorize_test:
-    image: authorize_test:1.0
-    container_name: authorize_test
-    profiles:
-      - allservice
-      - authorize
-    build:
-      context: ./services/authorize/test
-      dockerfile: Dockerfile
-    volumes:
-      - ./services/authorize/test/result:/test/result
-    <<: *test_service
-
 networks:
   backend-network:
     driver: bridge
