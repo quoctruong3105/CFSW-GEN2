@@ -9,7 +9,7 @@ The CFSW project has been refactored from its original monolithic design ([Origi
 - Continuous Monitoring: Systems to monitor both infrastructure and applications.
 
 ## ARCHITECTURE
-TODO
+![software_arch](https://github.com/user-attachments/assets/dbaaee55-aaeb-4320-a693-06951f5a0b7d)
 
 ## SERVICES
 TODO
