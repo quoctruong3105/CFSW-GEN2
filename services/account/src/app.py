@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import psycopg2
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
 
 # Load environment variables from .env file
@@ -337,6 +338,81 @@ def verifyLogin():
             return jsonify({"error": "Incorrect password"}), 401
         else:
             return jsonify({"message": "Login successful"}), 200
+
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/updateLastLogin', methods=['PUT'])
+def updateLastLogin():
+    data = request.json
+    username = data.get('username')
+
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+
+    try:
+        conn = getDBConnection()
+        cursor = conn.cursor()
+
+        lastLoginTime = datetime.now()
+
+        # Update the last_login field in the database for the given username
+        update_query = """
+        UPDATE accounts
+        SET last_login = %s
+        WHERE username = %s;
+        """
+        cursor.execute(update_query, (lastLoginTime, username))
+
+        # Commit the changes
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        # Check if any row was updated
+        if cursor.rowcount == 0:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({"message": "Last login updated successfully", "last_login": lastLoginTime}), 200
+
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/updateLastLogout', methods=['PUT'])
+def updateLastLogout():
+    data = request.json
+    username = data.get('username')
+
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+
+    try:
+        conn = getDBConnection()
+        cursor = conn.cursor()
+
+        lastLogoutTime = datetime.now()
+
+        # Update the last_logout field in the database for the given username
+        update_query = """
+        UPDATE accounts
+        SET last_logout = %s
+        WHERE username = %s;
+        """
+        cursor.execute(update_query, (lastLogoutTime, username))
+
+        # Commit the changes
+        conn.commit()
+
+        # Check if any row was updated
+        if cursor.rowcount == 0:
+            return jsonify({"error": "User not found"}), 404
+
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Last logout updated successfully", "last_logout": lastLogoutTime}), 200
 
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500

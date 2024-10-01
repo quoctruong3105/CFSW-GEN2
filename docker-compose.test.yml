@@ -6,6 +6,8 @@ x-app-service: &app_service
   networks:
     - db-network
     - backend-network
+  environment:
+      TZ: Asia/Ho_Chi_Minh
   command: [ "python3", "app.py" ]
 
 services:
@@ -21,6 +23,7 @@ services:
     networks:
       - db-network
     environment:
+      TZ: Asia/Ho_Chi_Minh
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
