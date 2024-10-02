@@ -16,12 +16,12 @@ pipeline {
         DOCKER_CRED = credentials('docker-hub-token')
     }
     stages {
-        stage ('Prebuild') {
+        stage('Prebuild') {
             steps {
                 script {
                     if (env.BRANCH_NAME.startsWith(SERVICE_BRANCH_PREFIX)) {
                         env.SERVICE = env.BRANCH_NAME.replaceFirst("${SERVICE_BRANCH_PREFIX}/", "")
-                        env.TAG = sh (script: "git rev-parse --short HEAD", returnStdout: true)
+                        env.TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
                     }
                 }
             }
@@ -68,7 +68,10 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing all services..."
-                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up"
+                    def testStatus = sh(script: "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up", returnStatus: true)
+                    if (testStatus != 0) {
+                        error "Testing all services failed with exit code ${testStatus}"
+                    }
                 }
             }
             post {
@@ -113,7 +116,10 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing ${env.SERVICE} service..."
-                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up"
+                    def serviceTestStatus = sh(script: "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up", returnStatus: true)
+                    if (serviceTestStatus != 0) {
+                        error "Testing ${env.SERVICE} failed with exit code ${serviceTestStatus}"
+                    }
                 }
             }
             post {
@@ -138,9 +144,7 @@ pipeline {
                         def tagCurrentCommit = "${DOCKER_USER}/${env.SERVICE}:${env.TAG}"
                         def tagLatest = "${DOCKER_USER}/${env.SERVICE}:latest"
                         echo "Logging into Docker Registry..."
-                        sh """
-                            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin ${DOCKER_REGISTRY}
-                        """
+                        sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin ${DOCKER_REGISTRY}"
                         echo "Tagging and pushing Docker images..."
                         sh """
                             docker tag ${env.SERVICE}:latest ${tagLatest}
@@ -156,7 +160,6 @@ pipeline {
     post {
         always {
             script {
-                // Clean up Docker containers, networks, volumes, and images created by Docker Compose
                 echo "Cleaning up Docker resources..."
                 sh '''
                     docker system prune -a -f
