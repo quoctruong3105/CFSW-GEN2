@@ -11,7 +11,8 @@ ${USERNAME}          john_doe
 ${LAST_LOGIN_AD}     2024-09-18 09:00:00
 ${LAST_LOGOUT_AD}    2024-09-18 17:00:00
 ${EXPECTED_MESSAGE_VERIFY_LOGIN}    Login successful
-
+${EXPECTED_MESSAGE_UPDATE_LOGIN}    Last login updated successfully
+${EXPECTED_MESSAGE_UPDATE_LOGOUT}    Last logout updated successfully
 
 *** Test Cases ***
 Test Home Page
@@ -30,7 +31,7 @@ Test Create User
     &{headers}=    Create Dictionary    Content-Type=application/json
 
     # Send POST request
-    ${response}=    POST    ${BASE_URL}/create_user    headers=&{headers}    json=${payload}
+    ${response}=    POST    ${BASE_URL}/createUser    headers=&{headers}    json=${payload}
 
     # Check if the response status code is 201 (created)
     Should Be Equal As Numbers    ${response.status_code}    201
@@ -58,9 +59,9 @@ Test Verify Login
 Test Change Password
     [Documentation]    Test successful password change.
 
-    ${payload}=    Create Dictionary    username=vu    old_password=123    new_password=321
+    ${payload}=    Create Dictionary    username=vu    oldPassword=123    newPassword=321
 
-    ${response}=    PUT    ${BASE_URL}/change_password    json=${payload}
+    ${response}=    PUT    ${BASE_URL}/changePassword    json=${payload}
 
     Should Be Equal As Numbers    ${response.status_code}    200
 
@@ -69,12 +70,40 @@ Test Change Password
 
     Log Status and JSON    ${response}
 
+Update Last Login
+    [Documentation]    Test updating the last login time for a user.
+
+    ${payload}=    Create Dictionary    username=vu
+
+    ${response}=    PUT    ${BASE_URL}/updateLastLogin    json=${payload}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_UPDATE_LOGIN}
+
+    Log Status and JSON    ${response}
+
+Update Last Logout
+    [Documentation]    Test updating the last logout time for a user.
+
+    ${payload}=    Create Dictionary    username=vu
+
+    ${response}=    PUT    ${BASE_URL}/updateLastLogout    json=${payload}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal As Strings    ${response_json['message']}    ${EXPECTED_MESSAGE_UPDATE_LOGOUT}
+
+    Log Status and JSON    ${response}
+
 Test Delete User
     [Documentation]    Test successful user deletion with valid credentials.
 
     ${payload}=    Create Dictionary    username=vu    password=321
 
-    ${response}=    DELETE    ${BASE_URL}/delete_user    json=${payload}
+    ${response}=    DELETE    ${BASE_URL}/deleteUser    json=${payload}
 
     Should Be Equal As Numbers    ${response.status_code}    200
 
@@ -86,7 +115,7 @@ Test Delete User
 Test Get Last Login
     [Documentation]    This test case checks the getlastlogin API.
 
-    ${response}=      GET     ${BASE_URL}/getlastlogin/${USERNAME}
+    ${response}=      GET     ${BASE_URL}/getLastLogin/${USERNAME}
 
     Should Be Equal As Numbers    ${response.status_code}    200
 
@@ -98,7 +127,7 @@ Test Get Last Login
 Test Get Last Logout
     [Documentation]    This test case checks the getlastlogout API.
 
-    ${response}=      GET     ${BASE_URL}/getlastlogout/${USERNAME}
+    ${response}=      GET     ${BASE_URL}/getLastLogout/${USERNAME}
 
     Should Be Equal As Numbers    ${response.status_code}    200
 
