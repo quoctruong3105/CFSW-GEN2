@@ -74,7 +74,7 @@ def createUser():
 
         insertQuery = """
         INSERT INTO accounts (username, password, role, last_login, last_logout)
-        VALUES (%s, %s, %s, NULL, NULL)  RETURNING id;
+        VALUES (%s, %s, %s, NULL, NULL)  RETURNING account_id;
         """
         cursor.execute(insertQuery, (username, password, role))
         userId = cursor.fetchone()[0]
