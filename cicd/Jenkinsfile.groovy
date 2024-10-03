@@ -68,9 +68,10 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing all services..."
-                    def testStatus = sh(script: "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up", returnStatus: true)
-                    if (testStatus != 0) {
-                        error "Testing all services failed with exit code ${testStatus}"
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile allservice up"
+                    def numOfTestFailed = checkTestContainersExitCode()
+                    if (numOfTestFailed != 0) {
+                        error("Automation Test Failed!")
                     }
                 }
             }
@@ -116,9 +117,10 @@ pipeline {
                 script {
                     sleep(5)
                     echo "Testing ${env.SERVICE} service..."
-                    def serviceTestStatus = sh(script: "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up", returnStatus: true)
-                    if (serviceTestStatus != 0) {
-                        error "Testing ${env.SERVICE} failed with exit code ${serviceTestStatus}"
+                    sh "docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile ${env.SERVICE} up"
+                    def numOfTestFailed = checkTestContainersExitCode()
+                    if (numOfTestFailed != 0) {
+                        error("Automation Test Failed!")
                     }
                 }
             }
@@ -169,4 +171,17 @@ pipeline {
             }
         }
     }
+}
+
+def checkTestContainersExitCode() {
+    def containers = sh(script: '''docker ps -a --format '{{.Names}}' | grep '_test$' ''', returnStdout: true).trim().split('\n')
+    def failedServices = []
+    containers.each { container ->
+        def exitCode = sh(script: "docker wait ${container}", returnStdout: true).trim()
+        if (exitCode != '0') {
+            failedServices << container
+            echo "${container} failed!"
+        }
+    }
+    return failedServices.size()
 }
