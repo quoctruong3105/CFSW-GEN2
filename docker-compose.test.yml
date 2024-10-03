@@ -23,7 +23,6 @@ services:
     networks:
       - db-network
     environment:
-      TZ: Asia/Ho_Chi_Minh
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:

@@ -285,7 +285,7 @@ def getLastLogout(username):
 
         lastLogout = result[0]
 
-        return jsonify({"username": username, "last_logout": lastLogout}), 200
+        return jsonify({"last_logout": lastLogout}), 200
 
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
