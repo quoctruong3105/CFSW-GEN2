@@ -4,6 +4,7 @@ version: '3'
 x-test-service: &test_service
   networks:
     - backend-network
+    - frontend-network
   command: [ "python3", "-m", "robot", "-d", "result/", "testcases/api_test.robot" ]
 
 services:
@@ -21,5 +22,7 @@ services:
     <<: *test_service
 
 networks:
+  frontend-network:
+    driver: bridge
   backend-network:
     driver: bridge

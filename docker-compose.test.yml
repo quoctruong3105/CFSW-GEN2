@@ -2,7 +2,8 @@ version: '3.8'
 
 x-app-service: &app_service
   depends_on:
-    - pg_db
+    data_feed:
+      condition: service_completed_successfully
   networks:
     - db-network
     - backend-network
@@ -29,7 +30,21 @@ services:
       - ./db/data:/var/lib/postgres/data
       - ./db/config/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init:/docker-entrypoint-initdb.d
+
+  data_feed:
+    image: data_feed
+    build:
+      context: ./tool/testdata
+      dockerfile: Dockerfile
+    container_name: data_feed
+    profiles:
+      - system
+      - db
+    depends_on:
+      - pg_db
+    networks:
+      - db-network
 
   api_gateway:
     image: nginx:1.23.3
