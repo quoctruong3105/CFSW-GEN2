@@ -27,7 +27,7 @@ None
 **Docstring:**
 
 python
-Create a new user in the accounts table.
+Create a new user in the account table.
 
 This function handles a POST request to create a new user. It expects
 the request payload to contain 'username', 'password', and optionally 'role'.
@@ -84,7 +84,7 @@ Returns:
 **Docstring:**
 
 python
-Delete a user from the accounts table.
+Delete a user from the account table.
 
 This function handles a DELETE request to delete a user. It expects
 the request payload to contain 'username' and 'password'. Both fields

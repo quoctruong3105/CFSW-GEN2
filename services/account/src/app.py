@@ -36,7 +36,7 @@ def home():
 @app.route('/createUser', methods=['POST'])
 def createUser():
     """
-    Create a new user in the accounts table.
+    Create a new user in the account table.
 
     This function handles a POST request to create a new user. It expects
     the request payload to contain 'username', 'password', and optionally 'role'.
@@ -73,7 +73,7 @@ def createUser():
         cursor = conn.cursor()
 
         insertQuery = """
-        INSERT INTO accounts (username, password, role, last_login, last_logout)
+        INSERT INTO account (username, password, role, last_login, last_logout)
         VALUES (%s, %s, %s, NULL, NULL)  RETURNING account_id;
         """
         cursor.execute(insertQuery, (username, password, role))
@@ -124,7 +124,7 @@ def changePassword():
         cursor = conn.cursor()
 
         # Fetch the user's current password and role from the database
-        cursor.execute("SELECT password, role FROM accounts WHERE username = %s", (username,))
+        cursor.execute("SELECT password, role FROM account WHERE username = %s", (username,))
         userData = cursor.fetchone()
 
         if userData is None:
@@ -141,7 +141,7 @@ def changePassword():
             return jsonify({"error": "Old password is incorrect"}), 401
 
         # Update the user's password in the database
-        cursor.execute("UPDATE accounts SET password = %s WHERE username = %s", (newPassword, username))
+        cursor.execute("UPDATE account SET password = %s WHERE username = %s", (newPassword, username))
         conn.commit()
 
         cursor.close()
@@ -155,7 +155,7 @@ def changePassword():
 @app.route('/deleteUser', methods=['DELETE'])
 def deleteUser():
     """
-    Delete a user from the accounts table.
+    Delete a user from the account table.
 
     This function handles a DELETE request to delete a user. It expects
     the request payload to contain 'username' and 'password'. Both fields
@@ -186,7 +186,7 @@ def deleteUser():
         cursor = conn.cursor()
 
         # Fetch the user's password and role from the database
-        cursor.execute("SELECT password, role FROM accounts WHERE username = %s", (username,))
+        cursor.execute("SELECT password, role FROM account WHERE username = %s", (username,))
         userData = cursor.fetchone()
 
         if userData is None:
@@ -203,7 +203,7 @@ def deleteUser():
             return jsonify({"error": "Incorrect password"}), 401
 
         # Delete the user from the database
-        cursor.execute("DELETE FROM accounts WHERE username = %s", (username,))
+        cursor.execute("DELETE FROM account WHERE username = %s", (username,))
         conn.commit()
 
         cursor.close()
@@ -236,13 +236,14 @@ def getLastLogin(username):
         cursor = conn.cursor()
 
         # Fetch the last login time from the database
-        cursor.execute("SELECT last_login FROM accounts WHERE username = %s", (username,))
+        cursor.execute("SELECT last_login FROM account WHERE username = %s", (username,))
         result = cursor.fetchone()
 
         if result is None:
             return jsonify({"error": "User not found"}), 404
 
         lastLogin = result[0]
+        lastLogin = lastLogin.strftime('%Y-%m-%d %H:%M:%S')
 
         cursor.close()
         conn.close()
@@ -274,7 +275,7 @@ def getLastLogout(username):
         cursor = conn.cursor()
 
         # Fetch last logout time
-        cursor.execute("SELECT last_logout FROM accounts WHERE username = %s", (username,))
+        cursor.execute("SELECT last_logout FROM account WHERE username = %s", (username,))
         result = cursor.fetchone()
 
         cursor.close()
@@ -284,6 +285,7 @@ def getLastLogout(username):
             return jsonify({"error": "User not found"}), 404
 
         lastLogout = result[0]
+        lastLogout = lastLogout.strftime('%Y-%m-%d %H:%M:%S')
 
         return jsonify({"last_logout": lastLogout}), 200
 
@@ -322,7 +324,7 @@ def verifyLogin():
         conn = getDBConnection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT password FROM accounts WHERE username = %s", (username,))
+        cursor.execute("SELECT password FROM account WHERE username = %s", (username,))
         result = cursor.fetchone()
 
         cursor.close()
@@ -358,7 +360,7 @@ def updateLastLogin():
 
         # Update the last_login field in the database for the given username
         update_query = """
-        UPDATE accounts
+        UPDATE account
         SET last_login = %s
         WHERE username = %s;
         """
@@ -395,7 +397,7 @@ def updateLastLogout():
 
         # Update the last_logout field in the database for the given username
         update_query = """
-        UPDATE accounts
+        UPDATE account
         SET last_logout = %s
         WHERE username = %s;
         """

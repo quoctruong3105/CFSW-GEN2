@@ -6,3 +6,4 @@ services/internet/test/result
 services/item/test/result
 services/inventory/test/result
 services/order/test/result
+tool/testdata/creds
