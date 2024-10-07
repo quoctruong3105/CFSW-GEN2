@@ -18,22 +18,21 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
 
+
 # Database connection
 def getDBConnection():
     conn = psycopg2.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        port=DB_PORT
+        host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
     )
     return conn
 
-@app.route('/', methods=['GET'])
+
+@app.route("/", methods=["GET"])
 def home():
     return f"Hello from {SERVICE_NAME} service"
 
-@app.route('/createUser', methods=['POST'])
+
+@app.route("/createUser", methods=["POST"])
 def createUser():
     """
     Create a new user in the account table.
@@ -61,9 +60,9 @@ def createUser():
     """
     data = request.json
 
-    username = data.get('username')
-    password = data.get('password')
-    role     = data.get('role')
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role")
 
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
@@ -89,7 +88,8 @@ def createUser():
         # Handle database errors
         return jsonify({"error": str(e)}), 500
 
-@app.route('/changePassword', methods=['PUT'])
+
+@app.route("/changePassword", methods=["PUT"])
 def changePassword():
     """
     Change the user's password.
@@ -112,19 +112,24 @@ def changePassword():
     """
     data = request.json
 
-    username = data.get('username')
-    oldPassword = data.get('oldPassword')
-    newPassword = data.get('newPassword')
+    username = data.get("username")
+    oldPassword = data.get("oldPassword")
+    newPassword = data.get("newPassword")
 
     if not username or not oldPassword or not newPassword:
-        return jsonify({"error": "Username, old password, and new password are required"}), 400
+        return (
+            jsonify({"error": "Username, old password, and new password are required"}),
+            400,
+        )
 
     try:
         conn = getDBConnection()
         cursor = conn.cursor()
 
         # Fetch the user's current password and role from the database
-        cursor.execute("SELECT password, role FROM account WHERE username = %s", (username,))
+        cursor.execute(
+            "SELECT password, role FROM account WHERE username = %s", (username,)
+        )
         userData = cursor.fetchone()
 
         if userData is None:
@@ -133,15 +138,21 @@ def changePassword():
         storedPassword, role = userData
 
         # Check if the user is an admin (admin is not allowed to change password)
-        if role == 'admin':
-            return jsonify({"error": "Admin is not allowed to change the password"}), 403
+        if role == "admin":
+            return (
+                jsonify({"error": "Admin is not allowed to change the password"}),
+                403,
+            )
 
         # Verify the old password
         if storedPassword != oldPassword:
             return jsonify({"error": "Old password is incorrect"}), 401
 
         # Update the user's password in the database
-        cursor.execute("UPDATE account SET password = %s WHERE username = %s", (newPassword, username))
+        cursor.execute(
+            "UPDATE account SET password = %s WHERE username = %s",
+            (newPassword, username),
+        )
         conn.commit()
 
         cursor.close()
@@ -152,7 +163,8 @@ def changePassword():
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/deleteUser', methods=['DELETE'])
+
+@app.route("/deleteUser", methods=["DELETE"])
 def deleteUser():
     """
     Delete a user from the account table.
@@ -175,8 +187,8 @@ def deleteUser():
     """
     data = request.json
 
-    username = data.get('username')
-    password = data.get('password')
+    username = data.get("username")
+    password = data.get("password")
 
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
@@ -186,7 +198,9 @@ def deleteUser():
         cursor = conn.cursor()
 
         # Fetch the user's password and role from the database
-        cursor.execute("SELECT password, role FROM account WHERE username = %s", (username,))
+        cursor.execute(
+            "SELECT password, role FROM account WHERE username = %s", (username,)
+        )
         userData = cursor.fetchone()
 
         if userData is None:
@@ -195,8 +209,11 @@ def deleteUser():
         storedPassword, role = userData
 
         # Check if the user is an admin (admins are not allowed to be deleted)
-        if role == 'admin':
-            return jsonify({"error": "Admin is not allowed to delete their account"}), 403
+        if role == "admin":
+            return (
+                jsonify({"error": "Admin is not allowed to delete their account"}),
+                403,
+            )
 
         # Verify the password
         if storedPassword != password:
@@ -214,7 +231,8 @@ def deleteUser():
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/getLastLogin/<username>', methods=['GET'])
+
+@app.route("/getLastLogin/<username>", methods=["GET"])
 def getLastLogin(username):
     """
     Retrieve the last login time of a user.
@@ -236,14 +254,16 @@ def getLastLogin(username):
         cursor = conn.cursor()
 
         # Fetch the last login time from the database
-        cursor.execute("SELECT last_login FROM account WHERE username = %s", (username,))
+        cursor.execute(
+            "SELECT last_login FROM account WHERE username = %s", (username,)
+        )
         result = cursor.fetchone()
 
         if result is None:
             return jsonify({"error": "User not found"}), 404
 
         lastLogin = result[0]
-        lastLogin = lastLogin.strftime('%Y-%m-%d %H:%M:%S')
+        lastLogin = lastLogin.strftime("%Y-%m-%d %H:%M:%S")
 
         cursor.close()
         conn.close()
@@ -253,7 +273,8 @@ def getLastLogin(username):
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/getLastLogout/<username>', methods=['GET'])
+
+@app.route("/getLastLogout/<username>", methods=["GET"])
 def getLastLogout(username):
     """
     Retrieve the last logout time of a user.
@@ -275,7 +296,9 @@ def getLastLogout(username):
         cursor = conn.cursor()
 
         # Fetch last logout time
-        cursor.execute("SELECT last_logout FROM account WHERE username = %s", (username,))
+        cursor.execute(
+            "SELECT last_logout FROM account WHERE username = %s", (username,)
+        )
         result = cursor.fetchone()
 
         cursor.close()
@@ -285,14 +308,15 @@ def getLastLogout(username):
             return jsonify({"error": "User not found"}), 404
 
         lastLogout = result[0]
-        lastLogout = lastLogout.strftime('%Y-%m-%d %H:%M:%S')
+        lastLogout = lastLogout.strftime("%Y-%m-%d %H:%M:%S")
 
         return jsonify({"last_logout": lastLogout}), 200
 
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/verifyLogin', methods=['POST'])
+
+@app.route("/verifyLogin", methods=["POST"])
 def verifyLogin():
     """
     Verify user login credentials.
@@ -314,8 +338,8 @@ def verifyLogin():
     """
     data = request.json
 
-    username = data.get('username')
-    password = data.get('password')
+    username = data.get("username")
+    password = data.get("password")
 
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
@@ -344,10 +368,11 @@ def verifyLogin():
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/updateLastLogin', methods=['PUT'])
+
+@app.route("/updateLastLogin", methods=["PUT"])
 def updateLastLogin():
     data = request.json
-    username = data.get('username')
+    username = data.get("username")
 
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -376,15 +401,24 @@ def updateLastLogin():
         if cursor.rowcount == 0:
             return jsonify({"error": "User not found"}), 404
 
-        return jsonify({"message": "Last login updated successfully", "last_login": lastLoginTime}), 200
+        return (
+            jsonify(
+                {
+                    "message": "Last login updated successfully",
+                    "last_login": lastLoginTime,
+                }
+            ),
+            200,
+        )
 
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/updateLastLogout', methods=['PUT'])
+
+@app.route("/updateLastLogout", methods=["PUT"])
 def updateLastLogout():
     data = request.json
-    username = data.get('username')
+    username = data.get("username")
 
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -414,10 +448,19 @@ def updateLastLogout():
         cursor.close()
         conn.close()
 
-        return jsonify({"message": "Last logout updated successfully", "last_logout": lastLogoutTime}), 200
+        return (
+            jsonify(
+                {
+                    "message": "Last logout updated successfully",
+                    "last_logout": lastLogoutTime,
+                }
+            ),
+            200,
+        )
 
     except psycopg2.Error as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=False)

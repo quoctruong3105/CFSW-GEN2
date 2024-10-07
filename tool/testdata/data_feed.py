@@ -6,9 +6,9 @@ from const import DataMap as dm
 from dummy_data import InventoryData as ivn_data, AccountData as acc_data
 
 
-class InventoryInsertor():
+class InventoryInsertor:
     def __init__(self):
-        self.db = Database(dbname='inventory')
+        self.db = Database(dbname="inventory")
 
     def insert_drink_groups(self):
         query = "INSERT INTO DRINK_GROUP (drink_group) VALUES (%s);"
@@ -49,7 +49,7 @@ class InventoryInsertor():
         query = "INSERT INTO DRINK_MATERIAL (drink_id, material_id, m_quantity, l_quantity) VALUES (%s, %s, %s, %s);"
         # data = data_inf.fetch_raw_data(dm.INVENTORY_SHEET, dm.DRINK_COUNT_CELL, dm.DRINK_RANGE)
         # drink_material_data = []
-        
+
         # for i, d in enumerate(data, start=1):
         #     m_comp = d[3].split("-")
         #     l_comp = d[4].split("-")
@@ -57,23 +57,38 @@ class InventoryInsertor():
         #         material_id = m_item.split(":")[0]
         #         m_quantity = m_item.split(":")[1]
         #         l_quantity = l_comp[i_comp].split(":")[1]
-                
+
         #         drink_material_data.append(
         #             (i, int(material_id), float(m_quantity), float(l_quantity))
         #         )
         drink_material_data = ivn_data.drink_material
         self.db.insert(query, drink_material_data)
 
-class AccountInsertor():
+
+class AccountInsertor:
     def __init__(self):
-        self.db = Database(dbname='account')
+        self.db = Database(dbname="account")
 
     def insert_accounts(self):
         query = "INSERT INTO ACCOUNT (username, password, role, last_login, last_logout) VALUES (%s, %s, %s, %s, %s);"
         # data = data_inf.fetch_raw_data(dm.ACCOUNT_SHEET, dm.ACCOUNT_COUNT_CELL, dm.ACCOUNT_RANGE)
         data = acc_data.account
-        data = [(m[0], m[1], m[2], 
-                datetime.strptime(m[3], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S') if len(m) > 3 else None,
-                datetime.strptime(m[4], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S') if len(m) > 4 else None) 
-                for m in data]
+        data = [
+            (
+                m[0],
+                m[1],
+                m[2],
+                datetime.strptime(m[3], "%Y-%m-%d %H:%M:%S").strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                if len(m) > 3
+                else None,
+                datetime.strptime(m[4], "%Y-%m-%d %H:%M:%S").strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                if len(m) > 4
+                else None,
+            )
+            for m in data
+        ]
         self.db.insert(query, data)

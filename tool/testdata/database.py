@@ -1,6 +1,7 @@
 import psycopg2
 import time
 
+
 class Database:
     def __init__(self, dbname):
         time.sleep(3)
@@ -11,7 +12,7 @@ class Database:
                 user="svcfsw",
                 password="cfsw12345",
                 host="pg_db",
-                port="5432"
+                port="5432",
             )
         except Exception as e:
             print(f"Failed to connect to the database: {e}")

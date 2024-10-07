@@ -57,3 +57,57 @@ Step 3: Run Docker Compose with Debug Profiles
     docker-compose -f docker-compose.debug.yml --env-file project.env --profile db --profile account up
 ```
 Step 4: In Visual Studio Code, go to the "Run and Debug" tab and select Python: Remote Attach to start debugging the specified service.
+
+### Pre-commit Hooks Setup
+
+This repository uses **pre-commit** to ensure code quality by running checks before each commit. It helps maintain a clean codebase by applying automatic fixes, code formatters, and other validation checks on files like `.yml`, `.py`, `Dockerfile`, `.sql`, `.groovy`, and `.json`.
+
+#### Prerequisites
+
+- Python (3.7+ recommended)
+- Git
+
+#### Setup
+
+Follow the steps below to set up **pre-commit** in your local environment:
+
+1. **Install Pre-commit**:
+```bash
+    pip install pre-commit
+ ```
+
+2. **Install the Pre-commit Hooks**:
+    After cloning the repository, run the following command in the root directory:
+```bash
+    pre-commit install
+```
+    This will add pre-commit hooks to run automatically before each commit.
+
+3. **Verify Pre-commit Installation**:
+    To ensure that the setup is correct, run:
+```bash
+    pre-commit run --all-files
+```
+    This command will execute the hooks on all files in the repository and display any issues found.
+
+#### Usage
+
+After setting up, **pre-commit** will automatically run checks before each `git commit`. If any issues are detected, they must be resolved before the commit is successful.
+
+###### Manual Run
+
+To run the pre-commit hooks manually on all files, use:
+```bash
+pre-commit run --all-files
+```
+#### Configuration
+The pre-commit configuration is defined in the `.pre-commit-config.yaml` file. It specifies hooks for checking and formatting:
+- File types checked: .yml, .yaml, .py, .sql, .groovy, .json, Dockerfile.
+- Hooks included:
+    - Trailing whitespace removal.
+    - End-of-file fixes.
+    - YAML validation.
+    - JSON validation.
+    - Large file detection.
+    - Code formatting using black for Python files.
+    - Type checking with mypy for Python files.
