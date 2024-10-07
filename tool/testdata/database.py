@@ -1,7 +1,10 @@
 import psycopg2
+import time
 
 class Database:
     def __init__(self, dbname):
+        time.sleep(3)
+        self.conn = None
         try:
             self.conn = psycopg2.connect(
                 dbname=dbname,
@@ -15,13 +18,12 @@ class Database:
 
     def insert(self, insert_query, data):
         print(insert_query)
+        cursor = self.conn.cursor()
         try:
-            cursor = self.conn.cursor()
             cursor.executemany(insert_query, data)
             self.conn.commit()
             print(f"Inserted {cursor.rowcount} rows to successfully.")
         except Exception as e:
             print(f"Error occurred while inserting: {e}")
-            pass
         finally:
             cursor.close()
