@@ -16,20 +16,19 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
 
+
 # Database connection
 def get_db_connection():
     conn = psycopg2.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        port=DB_PORT
+        host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
     )
     return conn
 
-@app.route('/', methods=['GET'])
+
+@app.route("/", methods=["GET"])
 def home():
     return f"Hello from {SERVICE_NAME} service"
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=False)
