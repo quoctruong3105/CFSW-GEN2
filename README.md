@@ -15,7 +15,7 @@ The CFSW project has been refactored from its original monolithic design ([Origi
 TODO
 
 ## CICDCT
-![CICD-flow](https://github.com/user-attachments/assets/1c096cad-aec6-4686-96de-2cf55e702a94)
+![cfsw-gen2-cicd](https://github.com/user-attachments/assets/2088fe31-c772-4ed4-b4b6-9e814dd1a014)
 
 ## HOW TO RUN ON LOCAL
 
