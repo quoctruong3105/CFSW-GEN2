@@ -15,6 +15,11 @@ services:
   pg_db:
     image: postgres:${DB_VERSION}
     container_name: pg_db
+    profiles:
+      - system
+      - db
+      - account
+      - inventory
     restart: always
     ports:
       - ${DB_PORT}:5432
@@ -31,6 +36,9 @@ services:
 
   data_feed:
     image: data_feed
+    profiles:
+      - system
+      - db
     build:
       context: ./tool/testdata
       dockerfile: Dockerfile
@@ -43,9 +51,13 @@ services:
   api_gateway:
     image: nginx:1.23.3
     container_name: api_gateway
+    profiles:
+      - system
+      - api_gateway
     restart: unless-stopped
     depends_on:
       - account
+      - inventory
     volumes:
       - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf
     ports:
@@ -57,8 +69,21 @@ services:
   account:
     image: ${DOCKER_REPO}/account:${APP_TAG}
     container_name: account
+    profiles:
+      - system
+      - account
     volumes:
       - ./services/account/src:/app
+    <<: *app_service
+
+  inventory:
+    image: ${DOCKER_REPO}/inventory:${APP_TAG}
+    container_name: inventory
+    profiles:
+      - system
+      - inventory
+    volumes:
+      - ./services/inventory/src:/app
     <<: *app_service
 
 networks:
