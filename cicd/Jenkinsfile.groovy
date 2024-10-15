@@ -11,6 +11,7 @@ pipeline {
         SERVICE_BRANCH_PREFIX = "sv"
         AUTO_TEST_COMPOSE_FILE = "auto-test.yml"
         PROD_COMPOSE_FILE = "docker-compose.prod.yml"
+        DEPLOY_SINGLE_FILE = "docker-compose.test.yml"
         PROJECT_ENV_FILE = "project.env"
         DOCKER_REGISTRY = "docker.io"
         DOCKER_CRED = credentials('docker-hub-token')
@@ -105,7 +106,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying ${env.SERVICE} service..."
-                    sh "docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} up -d --remove-orphans"
+                    sh "docker-compose -f ${DEPLOY_SINGLE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} up -d --remove-orphans"
                 }
             }
         }
@@ -128,7 +129,7 @@ pipeline {
                 always {
                     script {
                         sh """
-                            docker-compose -f ${PROD_COMPOSE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} down
+                            docker-compose -f ${DEPLOY_SINGLE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} down
                             docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile db --profile ${env.SERVICE} down
                             sleep 5
                         """
