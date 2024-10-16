@@ -6,8 +6,12 @@ Library  Collections
 ${BASE_URL}    http://inventory:5000
 ${CAKE_NAME}    Macaron
 ${TOPPING_NAME}    Kem
-${SOLD_UNITS}     ${5}
+${SOLD_UNITS_5}     ${5}
+${DRINK_NAME}    Sữa chua trái cây
+${SIZE}    m
+${SOLD_UNIT_1}    ${1}
 ${EXPECTED_MESSAGE_QUANTITY}    Quantity updated successfully
+${EXPECTED_MESSAGE_MATERIAL_QUANTITY}    Material quantities updated successfully
 
 *** Test Cases ***
 Test Home Page
@@ -30,7 +34,7 @@ Test Get List of Cakes
 Test Update Cake Quantity
     [Documentation]    Verify that we can update the quantity of a specific cake.
 
-    ${payload}=    Create Dictionary    cake=${CAKE_NAME}    sold_unit=${SOLD_UNITS}
+    ${payload}=    Create Dictionary    cake=${CAKE_NAME}    sold_unit=${SOLD_UNITS_5}
     ${response}=    POST    ${BASE_URL}/updateCakeQuantity    json=${payload}
 
     Should Be Equal As Numbers    ${response.status_code}    200
@@ -51,12 +55,27 @@ Test Get List of Toppings
 Test Update Topping Quantity
     [Documentation]    Verify that we can update the quantity of a specific topping.
 
-    ${payload}=    Create Dictionary    topping=${TOPPING_NAME}    sold_unit=${SOLD_UNITS}
+    ${payload}=    Create Dictionary    topping=${TOPPING_NAME}    sold_unit=${SOLD_UNITS_5}
     ${response}=    POST    ${BASE_URL}/updateToppingQuantity    json=${payload}
 
     Should Be Equal As Numbers    ${response.status_code}    200
 
     Dictionary Should Contain Value    ${response.json()}    ${EXPECTED_MESSAGE_QUANTITY}
+
+    Log Status and JSON    ${response}
+
+Test Update Material Quantity
+    [Documentation]    Verify that the material quantities are updated successfully for a valid request.
+
+    # Send the POST request with drink, size, and sold_unit
+    ${payload}=    Create Dictionary    drink=${DRINK_NAME}   size=${SIZE}    sold_unit=${SOLD_UNIT_1}
+    ${response}=    POST    ${BASE_URL}/updateMaterialQuantity    json=${payload}
+
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    ${response_body}=    Convert To Dictionary    ${response.json()}
+
+    Dictionary Should Contain Value    ${response.json()}   ${EXPECTED_MESSAGE_MATERIAL_QUANTITY}
 
     Log Status and JSON    ${response}
 
