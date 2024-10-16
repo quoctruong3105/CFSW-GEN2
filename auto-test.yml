@@ -21,6 +21,19 @@ services:
       - ./services/account/test/result:/test/result
     <<: *test_service
 
+  inventory_test:
+    image: inventory_test:1.0
+    container_name: inventory_test
+    profiles:
+      - allservice
+      - inventory
+    build:
+      context: ./services/inventory/test
+      dockerfile: Dockerfile
+    volumes:
+      - ./services/inventory/test/result:/test/result
+    <<: *test_service
+
 networks:
   frontend-network:
     driver: bridge

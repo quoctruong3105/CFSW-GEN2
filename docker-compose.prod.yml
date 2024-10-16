@@ -61,6 +61,13 @@ services:
       - ./services/account/src:/app
     <<: *app_service
 
+  inventory:
+    image: ${DOCKER_REPO}/inventory:${APP_TAG}
+    container_name: inventory
+    volumes:
+      - ./services/inventory/src:/app
+    <<: *app_service
+
 networks:
   frontend-network:
     driver: bridge
