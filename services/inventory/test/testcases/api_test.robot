@@ -64,6 +64,14 @@ Test Update Topping Quantity
 
     Log Status and JSON    ${response}
 
+Test Get List of Drink
+    [Documentation]    Verify that we can retrieve the list of Drink.
+
+    ${response}=    GET    ${BASE_URL}/getListDrink
+    Should Be Equal As Numbers    ${response.status_code}    200
+
+    Log Status and JSON    ${response}
+
 Test Update Material Quantity
     [Documentation]    Verify that the material quantities are updated successfully for a valid request.
 
