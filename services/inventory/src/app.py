@@ -39,7 +39,7 @@ def getListCake():
     records = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify(records), 200
+    return jsonify(records)
 
 
 @app.route("/updateCakeQuantity", methods=["POST"])
@@ -116,7 +116,7 @@ def getListTopping():
         else:
             toppingData = {
                 "topping": topping,
-                "cost": (record["cost"]) * 1000,
+                "cost": (record["cost"]),
                 "available_quantity": "N/A",
             }
             toppingList.append(toppingData)
@@ -124,7 +124,7 @@ def getListTopping():
     cursor.close()
     conn.close()
 
-    return jsonify(toppingList), 200
+    return jsonify(toppingList)
 
 
 def checkToppingState(topping):
@@ -222,30 +222,30 @@ def updateToppingQuantity():
         conn.close()
 
 
-def checkDrinkState(drinkName):
+def checkAvailableQuantity(drinkName):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # SQL query to get the comparison
     query = """
     SELECT
-        dm.drink_id,
-        dm.material_id,
+        m.material_id,
+        m.material,
         dm.m_quantity,
         dm.l_quantity,
-        m.quantity AS material_quantity,
+        m.quantity,
         CASE
-            WHEN m.quantity > 0 THEN dm.m_quantity::decimal / m.quantity
-            ELSE 0
+            WHEN dm.m_quantity > 0 THEN m.quantity / dm.m_quantity
+            ELSE NULL
         END AS available_quantity_m,
         CASE
-            WHEN m.quantity > 0 THEN dm.l_quantity::decimal / m.quantity
-            ELSE 0
+            WHEN dm.l_quantity > 0 THEN m.quantity / dm.l_quantity
+            ELSE NULL
         END AS available_quantity_l
     FROM
-        Drink_Material dm
+        Material m
     JOIN
-        Material m ON dm.material_id = m.material_id
+        Drink_Material dm ON m.material_id = dm.material_id
     JOIN
         Drink d ON dm.drink_id = d.drink_id
     WHERE
@@ -256,12 +256,22 @@ def checkDrinkState(drinkName):
         cursor.execute(query, (drinkName,))
         results = cursor.fetchall()
 
-        # Print or process the results
-        for row in results:
-            available_quantity_m = row["available_quantity_m"]
-            available_quantity_l = row["available_quantity_l"]
+        available_quantity_m = {
+            item["material"]: item["available_quantity_m"] for item in results
+        }
+        available_quantity_l = {
+            item["material"]: item["available_quantity_l"] for item in results
+        }
 
-            return available_quantity_m, available_quantity_l
+        # Convert to integer portion
+        available_quantity_m = {
+            key: int(value) for key, value in available_quantity_m.items()
+        }
+        available_quantity_l = {
+            key: int(value) for key, value in available_quantity_l.items()
+        }
+
+        return available_quantity_m, available_quantity_l
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -298,8 +308,7 @@ def getListDrink():
         drinkName = record["drink"]
 
         # Check availability for medium and large drinks
-        available_quantity_m, available_quantity_l = checkDrinkState(drinkName)
-
+        available_quantity_m, available_quantity_l = checkAvailableQuantity(drinkName)
         drinkData = {
             "drink": drinkName,
             "m_cost": record["m_cost"],
@@ -315,6 +324,75 @@ def getListDrink():
     conn.close()
 
     return jsonify(drinkList)
+
+
+@app.route("/updateMaterialQuantity", methods=["POST"])
+def updateMaterialQuantity():
+    data = request.get_json()
+    drink = data.get("drink")
+    size = data.get("size")  # "m" or "l"
+    sold_unit = data.get("sold_unit")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        # Get the required quantities of each material for the specified drink and size
+        query = """
+        SELECT
+            m.material_id,
+            m.quantity AS current_quantity,
+            CASE
+                WHEN %s = 'm' THEN dm.m_quantity
+                WHEN %s = 'l' THEN dm.l_quantity
+                ELSE 0
+            END AS required_quantity
+        FROM
+            Material m
+        JOIN
+            Drink_Material dm ON m.material_id = dm.material_id
+        JOIN
+            Drink d ON dm.drink_id = d.drink_id
+        WHERE
+            d.drink = %s;
+        """
+
+        # Execute the query with the given size and drink name
+        cursor.execute(query, (size, size, drink))
+        materials = cursor.fetchall()
+
+        # Loop through each material and update the quantity
+        for material in materials:
+            material_id = material["material_id"]
+            current_quantity = material["current_quantity"]
+            required_quantity = material["required_quantity"]
+
+            if required_quantity is None or required_quantity <= 0:
+                continue  # Skip if no quantity is required for this size
+
+            new_quantity = current_quantity - (required_quantity * sold_unit)
+
+            # Update the material quantity in the database
+            update_query = """
+            UPDATE Material
+            SET quantity = %s
+            WHERE material_id = %s;
+            """
+            cursor.execute(update_query, (new_quantity, material_id))
+
+        # Commit the changes
+        conn.commit()
+
+        return jsonify({"message": "Material quantities updated successfully"}), 200
+
+    except Exception as e:
+        conn.rollback()  # Rollback in case of error
+        return jsonify({"error": f"An error occurred: {e}"}), 500
+
+    finally:
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
 
 
 if __name__ == "__main__":
