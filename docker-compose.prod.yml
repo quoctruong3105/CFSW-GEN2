@@ -87,31 +87,21 @@ services:
       - backend-network
 
   account:
-    image: account:${APP_TAG}
-    build:
-      context: ./services/account/src
-      dockerfile: Dockerfile
+    image: ${DOCKER_REPO}/account:${APP_TAG}
     container_name: account
-      - account
     volumes:
       - ./services/account/src:/app
     <<: *app_service
 
   inventory:
-    image: inventory:${APP_TAG}
-    build:
-      context: ./services/inventory/src
-      dockerfile: Dockerfile
+    image: ${DOCKER_REPO}/inventory:${APP_TAG}
     container_name: inventory
     volumes:
       - ./services/inventory/src:/app
     <<: *app_service
 
   order:
-    image: order:${APP_TAG}
-    build:
-      context: ./services/order/src
-      dockerfile: Dockerfile
+    image: ${DOCKER_REPO}/order:${APP_TAG}
     container_name: order
     volumes:
       - ./services/order/src:/order
