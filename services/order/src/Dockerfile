@@ -9,13 +9,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y \
     curl \
+    postgresql \
     python3.10 \
     python3-pip \
     libpq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install flask psycopg2-binary python-dotenv debugpy
+RUN pip3 install flask psycopg2-binary python-dotenv pika debugpy
 
 WORKDIR /app
 

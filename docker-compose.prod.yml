@@ -9,15 +9,19 @@ x-app-service: &app_service
     - backend-network
   environment:
       TZ: Asia/Ho_Chi_Minh
+      PYTHONUNBUFFERED: 1
   command: [ "python3", "app.py" ]
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
 
 services:
   pg_db:
     image: postgres:${DB_VERSION}
     container_name: pg_db
     restart: always
-    ports:
-      - ${DB_PORT}:5432
     networks:
       - db-network
     environment:
@@ -28,6 +32,29 @@ services:
       - ./db/config/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./db/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
       - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - ./event_bus/lib:/var/lib/rabbitmq
+      - ./event_bus/log:/var/log/rabbitmq
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   data_feed:
     image: data_feed
@@ -45,27 +72,49 @@ services:
     container_name: api_gateway
     restart: unless-stopped
     depends_on:
-      - account
+      account:
+        condition: service_healthy
+      order:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
     volumes:
       - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "8080:80"
+      - "8080:8080"
     networks:
       - frontend-network
       - backend-network
 
   account:
-    image: ${DOCKER_REPO}/account:${APP_TAG}
+    image: account:${APP_TAG}
+    build:
+      context: ./services/account/src
+      dockerfile: Dockerfile
     container_name: account
+      - account
     volumes:
       - ./services/account/src:/app
     <<: *app_service
 
   inventory:
-    image: ${DOCKER_REPO}/inventory:${APP_TAG}
+    image: inventory:${APP_TAG}
+    build:
+      context: ./services/inventory/src
+      dockerfile: Dockerfile
     container_name: inventory
     volumes:
       - ./services/inventory/src:/app
+    <<: *app_service
+
+  order:
+    image: order:${APP_TAG}
+    build:
+      context: ./services/order/src
+      dockerfile: Dockerfile
+    container_name: order
+    volumes:
+      - ./services/order/src:/order
     <<: *app_service
 
 networks:

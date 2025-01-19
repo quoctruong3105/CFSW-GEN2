@@ -18,19 +18,19 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
 
-
-# Database connection
 def getDBConnection():
     conn = psycopg2.connect(
         host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
     )
     return conn
 
-
 @app.route("/", methods=["GET"])
 def home():
     return f"Hello from {SERVICE_NAME} service"
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
 
 @app.route("/createUser", methods=["POST"])
 def createUser():

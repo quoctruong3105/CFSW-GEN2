@@ -7,3 +7,5 @@ services/item/test/result
 services/inventory/test/result
 services/order/test/result
 tool/testdata/creds
+event_bus/lib
+event_bus/log
