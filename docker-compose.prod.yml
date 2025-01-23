@@ -63,7 +63,8 @@ services:
       dockerfile: Dockerfile
     container_name: data_feed
     depends_on:
-      - pg_db
+      pg_db:
+        condition: service_healthy
     networks:
       - db-network
 
