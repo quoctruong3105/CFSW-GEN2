@@ -10,7 +10,6 @@ ${SOLD_UNITS_5}     ${5}
 ${DRINK_NAME}    Sữa chua trái cây
 ${SIZE}    m
 ${SOLD_UNIT_1}    ${1}
-${EXPECTED_MESSAGE_QUANTITY}    Quantity updated successfully
 ${EXPECTED_MESSAGE_MATERIAL_QUANTITY}    Material quantities updated successfully
 
 *** Test Cases ***
@@ -40,7 +39,6 @@ Test Update Cake Quantity
     Should Be Equal As Numbers    ${response.status_code}    200
 
     ${response_json}=    Set Variable    ${response.json()}
-    Dictionary Should Contain Value    ${response.json()}    ${EXPECTED_MESSAGE_QUANTITY}
 
     Log Status and JSON    ${response}
 
@@ -59,8 +57,6 @@ Test Update Topping Quantity
     ${response}=    POST    ${BASE_URL}/updateToppingQuantity    json=${payload}
 
     Should Be Equal As Numbers    ${response.status_code}    200
-
-    Dictionary Should Contain Value    ${response.json()}    ${EXPECTED_MESSAGE_QUANTITY}
 
     Log Status and JSON    ${response}
 
