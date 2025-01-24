@@ -1,9 +1,6 @@
 from data_feed import InventoryInsertor, AccountInsertor
-import time
 
 if __name__ == "__main__":
-    time.sleep(3)
-
     inventory_ist = InventoryInsertor()
     inventory_ist.insert_drink_groups()
     inventory_ist.insert_materials()

@@ -1,39 +1,42 @@
 from flask import Flask, jsonify, request
 import psycopg2
 from dotenv import load_dotenv
+import pika
 from psycopg2.extras import RealDictCursor
+import json
+import threading
+import requests
 import os
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 
-# Get DB config from environment variables
 SERVICE_NAME = os.getenv("SERVICE_NAME")
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
+EVENT_BUS_HOST = os.getenv("EVENT_BUS_HOST")
 
-
-# Database connection
-def get_db_connection():
+def getDBconnection():
     conn = psycopg2.connect(
         host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
     )
     return conn
 
-
 @app.route("/", methods=["GET"])
 def home():
     return f"Hello from {SERVICE_NAME} service"
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
 
 @app.route("/getListCake", methods=["GET"])
 def getListCake():
-    conn = get_db_connection()
+    conn = getDBconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM CAKE;")
     records = cursor.fetchall()
@@ -48,7 +51,6 @@ def updateCakeQuantity():
         data = request.json
         cake = data.get("cake")
         soldUnit = data.get("sold_unit")
-
         if not cake or soldUnit is None:
             return (
                 jsonify(
@@ -56,38 +58,23 @@ def updateCakeQuantity():
                 ),
                 400,
             )
-
-        conn = get_db_connection()
+        conn = getDBconnection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-
-        # Fetch the current quantity of the specified cake
         cursor.execute("SELECT quantity FROM CAKE WHERE cake = %s", (cake,))
         result = cursor.fetchone()
-
         if not result:
             return jsonify({"error": "Cake not found"}), 404
-
         currentQuantity = result["quantity"]
         newQuantity = currentQuantity - soldUnit
-
         if newQuantity < 0:
             return jsonify({"error": "Not enough quantity available"}), 400
-
-        # Update the quantity in the database
         cursor.execute(
             "UPDATE CAKE SET quantity = %s WHERE cake = %s", (newQuantity, cake)
         )
         conn.commit()
-        return (
-            jsonify(
-                {"message": "Quantity updated successfully", "newQuantity": newQuantity}
-            ),
-            200,
-        )
-
+        return jsonify({"message": "Cake quantities updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
     finally:
         cursor.close()
         conn.close()
@@ -95,7 +82,7 @@ def updateCakeQuantity():
 
 @app.route("/getListTopping", methods=["GET"])
 def getListTopping():
-    conn = get_db_connection()
+    conn = getDBconnection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("SELECT topping, cost FROM TOPPING;")
     records = cursor.fetchall()
@@ -109,8 +96,8 @@ def getListTopping():
         if is_available:
             toppingData = {
                 "topping": topping,
-                "cost": (record["cost"]),  # Convert to string for JSON serialization
-                "available_quantity": available_quantity,  # Convert to string to maintain precision
+                "cost": (record["cost"]),
+                "available_quantity": available_quantity,
             }
             toppingList.append(toppingData)
         else:
@@ -129,10 +116,9 @@ def getListTopping():
 
 def checkToppingState(topping):
     try:
-        conn = get_db_connection()
+        conn = getDBconnection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Fetch the quantity and quantity_per_drink for the specified topping
         cursor.execute(
             "SELECT quantity, quantity_per_drink FROM TOPPING WHERE topping = %s",
             (topping,),
@@ -174,46 +160,26 @@ def updateToppingQuantity():
                 ),
                 400,
             )
-
-        conn = get_db_connection()
+        conn = getDBconnection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-
         cursor.execute(
             "SELECT quantity, quantity_per_drink FROM TOPPING WHERE topping = %s",
             (topping,),
         )
         result = cursor.fetchone()
-
         if not result:
             return jsonify({"error": "Topping not found"}), 404
-
         quantity = result["quantity"]
         quantityPerDrink = result["quantity_per_drink"]
-
-        # Calculate the new quantity based on the formula
         newQuantity = quantity - (quantityPerDrink * soldUnit)
-
-        # Ensure that the new quantity does not go below zero
         if newQuantity < 0:
             return jsonify({"error": "Not enough quantity available"}), 400
-
         cursor.execute(
             "UPDATE TOPPING SET quantity = %s WHERE topping = %s",
             (newQuantity, topping),
         )
         conn.commit()
-
-        return (
-            jsonify(
-                {
-                    "message": "Quantity updated successfully",
-                    "topping": topping,
-                    "new_quantity": newQuantity,
-                }
-            ),
-            200,
-        )
-
+        return jsonify({"message": "Topping quantities updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -223,10 +189,9 @@ def updateToppingQuantity():
 
 
 def checkAvailableQuantity(drinkName):
-    conn = get_db_connection()
+    conn = getDBconnection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-    # SQL query to get the comparison
     query = """
     SELECT
         m.material_id,
@@ -263,7 +228,6 @@ def checkAvailableQuantity(drinkName):
             item["material"]: item["available_quantity_l"] for item in results
         }
 
-        # Convert to integer portion
         available_quantity_m = {
             key: int(value) for key, value in available_quantity_m.items()
         }
@@ -278,14 +242,13 @@ def checkAvailableQuantity(drinkName):
         return None, None
 
     finally:
-        # Close the cursor and connection
         cursor.close()
         conn.close()
 
 
 @app.route("/getListDrink", methods=["GET"])
 def getListDrink():
-    conn = get_db_connection()
+    conn = getDBconnection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     query = """
     SELECT
@@ -298,7 +261,6 @@ def getListDrink():
     JOIN
         Drink_Group dg ON d.drink_group_id = dg.drink_group_id;  -- Joining Drink and Drink_Group
     """
-    # Fetching all drinks
     cursor.execute(query)
     records = cursor.fetchall()
 
@@ -307,7 +269,6 @@ def getListDrink():
     for record in records:
         drinkName = record["drink"]
 
-        # Check availability for medium and large drinks
         available_quantity_m, available_quantity_l = checkAvailableQuantity(drinkName)
         drinkData = {
             "drink": drinkName,
@@ -333,11 +294,10 @@ def updateMaterialQuantity():
     size = data.get("size")  # "m" or "l"
     sold_unit = data.get("sold_unit")
 
-    conn = get_db_connection()
+    conn = getDBconnection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
-        # Get the required quantities of each material for the specified drink and size
         query = """
         SELECT
             m.material_id,
@@ -357,43 +317,87 @@ def updateMaterialQuantity():
             d.drink = %s;
         """
 
-        # Execute the query with the given size and drink name
         cursor.execute(query, (size, size, drink))
         materials = cursor.fetchall()
-
-        # Loop through each material and update the quantity
         for material in materials:
             material_id = material["material_id"]
             current_quantity = material["current_quantity"]
             required_quantity = material["required_quantity"]
 
             if required_quantity is None or required_quantity <= 0:
-                continue  # Skip if no quantity is required for this size
+                continue
 
             new_quantity = current_quantity - (required_quantity * sold_unit)
-
-            # Update the material quantity in the database
             update_query = """
             UPDATE Material
             SET quantity = %s
             WHERE material_id = %s;
             """
             cursor.execute(update_query, (new_quantity, material_id))
-
-        # Commit the changes
         conn.commit()
-
         return jsonify({"message": "Material quantities updated successfully"}), 200
-
     except Exception as e:
-        conn.rollback()  # Rollback in case of error
+        conn.rollback()
         return jsonify({"error": f"An error occurred: {e}"}), 500
-
     finally:
-        # Close the cursor and connection
         cursor.close()
         conn.close()
 
+def onConfirmPayment():
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(EVENT_BUS_HOST))
+        channel = connection.channel()
+
+        channel.exchange_declare(exchange='order', exchange_type='fanout')
+        result = channel.queue_declare(queue='', exclusive=True)
+        queue_name = result.method.queue
+        channel.queue_bind(exchange='order', queue=queue_name)
+
+        def callback(ch, method, properties, body):
+            message = json.loads(body)
+            drink = message.get('drink', [])
+            print(f"drink: {drink}")
+            for dr in drink:
+                dr_data = {
+                    'drink': dr.get('name'),
+                    'size': dr.get('size'),
+                    'sold_unit': dr.get('quantity')
+                }
+                try:
+                    response = requests.post("http://localhost:5000/updateMaterialQuantity", json=dr_data)
+                    print(f"Update Response: {response.json()}")
+                except Exception as e:
+                    print(f"Error calling updateMaterialQuantity API: {str(e)}")
+                topping = dr.get('topping', [])
+                for tp in topping:
+                    tp_data = {
+                        'topping': tp.get('name'),
+                        'sold_unit': tp.get('quantity')
+                    }
+                    try:
+                        response = requests.post("http://localhost:5000/updateToppingQuantity", json=tp_data)
+                    except Exception as e:
+                        print(f"Error calling updateMaterialQuantity API: {str(e)}")
+            cake = message.get('cake', [])
+            print(f"cake: {cake}")
+            for ck in cake:
+                ck_data = {
+                    'cake': ck.get('name'),
+                    'sold_unit': ck.get('quantity')
+                }
+                try:
+                    response = requests.post("http://localhost:5000/updateCakeQuantity", json=ck_data)
+                except Exception as e:
+                    print(f"Error calling updateMaterialQuantity API: {str(e)}")
+
+        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+        channel.start_consuming()
+
+    except Exception as e:
+        print(f"Error while consuming messages: {str(e)}")
+
+
+threading.Thread(target=onConfirmPayment, daemon=True).start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=False)

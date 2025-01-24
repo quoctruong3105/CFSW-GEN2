@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -8,12 +8,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y \
-    python3.10 \
-    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install robotframework robotframework-requests
+RUN pip3 install --no-cache-dir robotframework robotframework-requests
 
 WORKDIR /test/testcases
 
