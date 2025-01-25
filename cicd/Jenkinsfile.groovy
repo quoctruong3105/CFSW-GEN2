@@ -106,7 +106,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying ${env.SERVICE} service..."
-                    sh "docker-compose -f ${DEPLOY_SINGLE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} up -d --remove-orphans"
+                    sh "docker-compose -f ${DEPLOY_SINGLE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile event-bus --profile ${env.SERVICE} up -d --remove-orphans"
                 }
             }
         }
@@ -129,7 +129,7 @@ pipeline {
                 always {
                     script {
                         sh """
-                            docker-compose -f ${DEPLOY_SINGLE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile ${env.SERVICE} down
+                            docker-compose -f ${DEPLOY_SINGLE_FILE} --env-file ${PROJECT_ENV_FILE} --profile db --profile event-bus --profile ${env.SERVICE} down
                             docker-compose -f ${AUTO_TEST_COMPOSE_FILE} --profile db --profile ${env.SERVICE} down
                             sleep 5
                         """

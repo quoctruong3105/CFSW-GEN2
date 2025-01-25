@@ -4,6 +4,8 @@ x-app-service: &app_service
   depends_on:
     data_feed:
       condition: service_completed_successfully
+    rabbitmq:
+      condition: service_healthy
   networks:
     - db-network
     - backend-network
@@ -75,6 +77,8 @@ services:
     depends_on:
       account:
         condition: service_healthy
+      discount:
+        condition: service_healthy
       order:
         condition: service_healthy
       inventory:
@@ -90,22 +94,21 @@ services:
   account:
     image: ${DOCKER_REPO}/account:${APP_TAG}
     container_name: account
-    volumes:
-      - ./services/account/src:/app
     <<: *app_service
 
   inventory:
     image: ${DOCKER_REPO}/inventory:${APP_TAG}
     container_name: inventory
-    volumes:
-      - ./services/inventory/src:/app
+    <<: *app_service
+
+  discount:
+    image: ${DOCKER_REPO}/discount:${APP_TAG}
+    container_name: discount
     <<: *app_service
 
   order:
     image: ${DOCKER_REPO}/order:${APP_TAG}
     container_name: order
-    volumes:
-      - ./services/order/src:/order
     <<: *app_service
 
 networks:

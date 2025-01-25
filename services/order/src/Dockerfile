@@ -16,6 +16,7 @@ RUN pip3 install --no-cache-dir flask \
     psycopg2-binary \
     python-dotenv \
     pika \
+    requests \
     debugpy
 
 # ============================
