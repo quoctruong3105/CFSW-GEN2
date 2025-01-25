@@ -49,6 +49,7 @@ services:
     restart: always
     profiles:
       - system
+      - event-bus
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest

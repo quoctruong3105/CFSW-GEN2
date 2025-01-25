@@ -47,6 +47,19 @@ services:
       - ./services/order/test/result:/test/result
     <<: *test_service
 
+  discount_test:
+    image: discount_test:1.0
+    container_name: discount_test
+    profiles:
+      - allservice
+      - discount
+    build:
+      context: ./services/discount/test
+      dockerfile: Dockerfile
+    volumes:
+      - ./services/discount/test/result:/test/result
+    <<: *test_service
+
 networks:
   frontend-network:
     driver: bridge
