@@ -4,6 +4,8 @@ x-app-service: &app_service
   depends_on:
     data_feed:
       condition: service_completed_successfully
+    rabbitmq:
+      condition: service_healthy
   networks:
     - db-network
     - backend-network
@@ -59,7 +61,7 @@ services:
     networks:
       - backend-network
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: rabbitmq-diagnostics -q ping
       interval: 10s
       timeout: 5s
       retries: 5
@@ -88,6 +90,8 @@ services:
     depends_on:
       account:
         condition: service_healthy
+      discount:
+        condition: service_healthy
       order:
         condition: service_healthy
       inventory:
@@ -114,8 +118,6 @@ services:
     profiles:
       - system
       - account
-    volumes:
-      - ./services/account/src:/app
     <<: *app_service
 
   inventory:
@@ -127,8 +129,6 @@ services:
     profiles:
       - system
       - inventory
-    volumes:
-      - ./services/inventory/src:/app
     <<: *app_service
 
   order:
@@ -140,8 +140,17 @@ services:
     profiles:
       - system
       - order
-    volumes:
-      - ./services/order/src:/order
+    <<: *app_service
+
+  discount:
+    image: discount:${APP_TAG}
+    build:
+      context: ./services/discount/src
+      dockerfile: Dockerfile
+    container_name: discount
+    profiles:
+      - system
+      - discount
     <<: *app_service
 
 networks:

@@ -12,6 +12,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
+order = {}
+
 SERVICE_NAME = os.getenv("SERVICE_NAME")
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
@@ -343,19 +345,19 @@ def updateMaterialQuantity():
         cursor.close()
         conn.close()
 
+
 def onConfirmPayment():
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(EVENT_BUS_HOST))
         channel = connection.channel()
-
-        channel.exchange_declare(exchange='order', exchange_type='fanout')
+        channel.exchange_declare(exchange='payment', exchange_type='fanout')
         result = channel.queue_declare(queue='', exclusive=True)
         queue_name = result.method.queue
-        channel.queue_bind(exchange='order', queue=queue_name)
+        channel.queue_bind(exchange='payment', queue=queue_name)
 
         def callback(ch, method, properties, body):
-            message = json.loads(body)
-            drink = message.get('drink', [])
+            global order
+            drink = order.get('drink', [])
             print(f"drink: {drink}")
             for dr in drink:
                 dr_data = {
@@ -378,7 +380,7 @@ def onConfirmPayment():
                         response = requests.post("http://localhost:5000/updateToppingQuantity", json=tp_data)
                     except Exception as e:
                         print(f"Error calling updateMaterialQuantity API: {str(e)}")
-            cake = message.get('cake', [])
+            cake = order.get('cake', [])
             print(f"cake: {cake}")
             for ck in cake:
                 ck_data = {
@@ -397,7 +399,28 @@ def onConfirmPayment():
         print(f"Error while consuming messages: {str(e)}")
 
 
+def onSetupPayment():
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(EVENT_BUS_HOST))
+        channel = connection.channel()
+        channel.exchange_declare(exchange='order', exchange_type='fanout')
+        result = channel.queue_declare(queue='', exclusive=True)
+        queue_name = result.method.queue
+        channel.queue_bind(exchange='order', queue=queue_name)
+
+        def callback(ch, method, properties, body):
+            global order
+            order = json.loads(body)
+        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+        channel.start_consuming()
+
+    except Exception as e:
+        print(f"Error while consuming messages: {str(e)}")
+
+
+threading.Thread(target=onSetupPayment, daemon=True).start()
 threading.Thread(target=onConfirmPayment, daemon=True).start()
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=False)
