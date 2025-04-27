@@ -17,6 +17,15 @@ TODO
 ## CICDCT
 ![cfsw-gen2-cicd](https://github.com/user-attachments/assets/2088fe31-c772-4ed4-b4b6-9e814dd1a014)
 
+## PROD DEPLOYMENT
+![Blank diagram](https://github.com/user-attachments/assets/0ad6995d-2b84-4d1d-a1cd-198ac0536722)
+Automation deployment with Terraform. Please follow `cicd/iac_aws`.
+
+Result:
+![getListCake](https://github.com/user-attachments/assets/160886e3-f836-490c-8d22-b360a0049f41)
+
+TODO: implement continuous deployment
+
 ## HOW TO RUN ON LOCAL
 
 ### Deploy and Test one or more specific service
