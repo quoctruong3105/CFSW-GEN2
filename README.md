@@ -17,6 +17,10 @@ TODO
 ## CICDCT
 ![cfsw-gen2-cicd](https://github.com/user-attachments/assets/2088fe31-c772-4ed4-b4b6-9e814dd1a014)
 
+![Jenkins-multibranch](https://github.com/user-attachments/assets/0660b80e-6020-4b7e-ac90-2da16cdf609a)
+
+![Jenkins-pr](https://github.com/user-attachments/assets/6accc288-2b30-4c96-9993-2812b3568e67)
+
 ## PROD DEPLOYMENT
 ![Blank diagram](https://github.com/user-attachments/assets/0ad6995d-2b84-4d1d-a1cd-198ac0536722)
 Automation deployment with Terraform. Please follow `cicd/iac_aws`.
